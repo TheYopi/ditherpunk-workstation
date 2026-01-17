@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ditherpunk Workstation</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --panel: #161616;
+            --border: #333;
+            --text-main: #ccc;
+            --text-muted: #777;
+            --accent: #ff0055;
+            --accent-hover: #ff2277;
+            --danger: #ff3333;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: 'Segoe UI', 'Roboto Mono', monospace;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 13px;
+        }
+
+        /* --- SCROLLBAR STYLING --- */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        * { scrollbar-width: thin; scrollbar-color: #333 var(--bg); }
+
+        /* --- LAYOUT --- */
+        .sidebar {
+            width: 340px; 
+            background: var(--panel);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        #sidebar-left { border-right: 1px solid var(--border); }
+        #sidebar-right { border-left: 1px solid var(--border); }
+
+        .scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid var(--border);
+            background: #111;
+        }
+
+        #viewport {
+            flex: 1;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            display: block;
+            background-image: 
+                linear-gradient(45deg, #111 25%, transparent 25%), 
+                linear-gradient(-45deg, #111 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #111 75%), 
+                linear-gradient(-45deg, transparent 75%, #111 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* --- CONTROLS --- */
+        h1 { margin: 0 0 20px 0; color: #fff; text-transform: uppercase; letter-spacing: 2px; font-size: 1.2rem; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+        
+        .group { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: rgba(255,255,255,0.02); }
+        
+        .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .header-left { display: flex; align-items: center; gap: 8px; }
+        .group-title { color: var(--accent); font-weight: bold; text-transform: uppercase; font-size: 0.85rem; }
+        
+        .sub-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin: 15px 0 8px 0; border-bottom: 1px dashed #333; padding-bottom: 5px; 
+        }
+        .sub-title { font-size: 0.75rem; color: #fff; font-weight: bold; text-transform: uppercase; }
+
+        .reset-icon { cursor: pointer; color: var(--text-muted); font-size: 10px; text-decoration: underline; }
+        .reset-icon:hover { color: #fff; }
+
+        .control-row { margin-bottom: 12px; }
+        .label-row { display: flex; justify-content: space-between; margin-bottom: 4px; color: var(--text-muted); }
+        .val { color: var(--accent); font-family: monospace; }
+
+        input[type="checkbox"].toggle {
+            appearance: none; width: 30px; height: 16px; background: #333; border-radius: 10px;
+            position: relative; cursor: pointer; transition: 0.2s;
+        }
+        input[type="checkbox"].toggle::after {
+            content:''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
+            background: #fff; border-radius: 50%; transition: 0.2s;
+        }
+        input[type="checkbox"].toggle:checked { background: var(--accent); }
+        input[type="checkbox"].toggle:checked::after { left: 16px; }
+
+        input[type="range"] { width: 100%; height: 4px; background: #333; border-radius: 2px; -webkit-appearance: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: #fff; border-radius: 50%; cursor: pointer; transition: 0.1s; }
+        input[type="range"]::-webkit-slider-thumb:hover { background: var(--accent); transform: scale(1.2); }
+        
+        select { width: 100%; background: #222; color: #fff; padding: 6px; border: 1px solid #444; border-radius: 4px; outline: none; cursor: pointer; }
+        input[type="color"] { width: 100%; height: 25px; border: none; padding: 0; background: none; cursor: pointer; }
+        input[type="number"] { background: #222; border: 1px solid #444; color: #fff; width: 50px; text-align: center; }
+        input[type="checkbox"]:not(.toggle) { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
+        
+        textarea {
+            width: 100%; background: #222; border: 1px solid #444; color: var(--accent);
+            font-family: monospace; font-size: 10px; padding: 5px; resize: vertical;
+            margin-bottom: 5px; box-sizing: border-box;
+        }
+        textarea:focus { outline: 1px solid var(--accent); }
+        input[type="text"] {
+            width: 100%; background: #222; border: 1px solid #444; color: #fff;
+            padding: 6px; box-sizing: border-box; margin-bottom: 5px;
+        }
+
+        .btn {
+            background: #333; color: #fff; border: none; padding: 10px; width: 100%; 
+            text-transform: uppercase; font-weight: bold; cursor: pointer; border-radius: 4px;
+            margin-bottom: 5px; transition: 0.2s; font-size: 0.8rem;
+        }
+        .btn:hover { background: #444; }
+        .btn.primary { background: var(--accent); color: #000; }
+        .btn.primary:hover { background: var(--accent-hover); }
+        .btn.secondary { background: #222; border: 1px solid #444; }
+        
+        .btn.danger { background: #441111; color: #ff9999; border: 1px solid #662222; }
+        .btn.danger:hover { background: var(--danger); color: #fff; }
+
+        .btn-row { display: flex; gap: 5px; }
+
+        .seed-control { display: flex; gap: 5px; align-items: center; }
+        .seed-control input { flex: 1; padding: 5px; }
+        .seed-btn { width: 30px; padding: 5px; }
+
+        #matrix-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-top: 10px; }
+        .m-cell { background: #000; border: 1px solid #444; color: var(--accent); width: 100%; text-align: center; font-family: monospace; padding: 5px 0; border: none; }
+        .m-cell:focus { outline: 1px solid var(--accent); background: #222; }
+
+        #canvas-wrapper {
+            position: absolute;
+            top: 0; left: 0;
+            transform-origin: 0 0;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        #canvas-clipper {
+            position: relative;
+            overflow: hidden; 
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas { display: block; image-rendering: pixelated; }
+        
+        #original-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: contain; background-repeat: no-repeat;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s;
+            z-index: 10;
+        }
+        #original-overlay.visible { opacity: 1; }
+
+        .fx-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        
+        #scanlines {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5));
+            background-size: 100% 4px;
+            z-index: 5;
+            mix-blend-mode: overlay;
+        }
+
+        #scanlines-vert {
+            background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.5));
+            background-size: 4px 100%;
+            z-index: 5;
+            mix-blend-mode: overlay;
+        }
+
+        #toolbar {
+            position: absolute; bottom: 20px; right: 20px;
+            background: rgba(20,20,20,0.9); border: 1px solid #444;
+            padding: 8px; border-radius: 30px; display: flex; gap: 8px;
+            z-index: 30;
+        }
+        .tool-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid #444;
+            background: #222; color: #fff; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold;
+        }
+        .tool-btn:hover { background: var(--accent); border-color: var(--accent); color: #000; }
+
+        /* --- FLOATING UI ELEMENTS --- */
+        .float-pill {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 40;
+            background: rgba(0,0,0,0.85);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
+        }
+
+        #compare-btn {
+            top: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #compare-btn:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        #resolution-display {
+            bottom: 20px;
+            pointer-events: none;
+            font-family: monospace;
+            border-color: #444;
+            color: #888;
+        }
+
+        #loading-overlay {
+            position: absolute; 
+            top: 70px;
+            left: 50%; 
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.95); border: 1px solid var(--accent);
+            padding: 8px 16px; border-radius: 20px; z-index: 100;
+            display: none; align-items: center; gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            font-weight: bold; color: #fff; letter-spacing: 1px; text-transform: uppercase; font-size: 0.8rem;
+        }
+        .spinner {
+            width: 14px; height: 14px; border: 2px solid var(--accent); border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-left" class="sidebar">
+        <div class="scroll-container">
+            <h1>Ditherpunk</h1>
+            
+            <button class="btn primary" onclick="document.getElementById('fileIn').click()">Upload Image (or Paste)</button>
+            <input type="file" id="fileIn" accept="image/*" style="display:none">
+
+            <div class="group">
+                <div class="group-header">
+                    <div class="header-left">
+                        <input type="checkbox" class="toggle" id="on-glitch" checked oninput="update('glitch')">
+                        <span class="group-title">Glitch FX</span>
+                    </div>
+                    <span class="reset-icon" onclick="resetGroup('glitch')">Reset All</span>
+                </div>
+                
+                <div class="control-row">
+                    <div class="label-row"><label>Random Seed</label></div>
+                    <div class="seed-control">
+                        <button class="btn secondary seed-btn" onclick="stepSeed(-1)">-</button>
+                        <input type="number" id="glitchSeed" value="1337" oninput="update('glitch')">
+                        <button class="btn secondary seed-btn" onclick="stepSeed(1)">+</button>
+                    </div>
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left">
+                        <input type="checkbox" class="toggle" id="on-sort" checked oninput="update('glitch')">
+                        <span class="sub-title">Pixel Sorting</span>
+                    </div>
+                    <span class="reset-icon" onclick="resetSub('sort')">Reset</span>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Threshold (Bright)</label> <span id="disp-sortThresh" class="val">0</span></div>
+                    <input type="range" id="sortThresh" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+                 <div class="control-row">
+                    <div class="label-row"><label>Direction</label></div>
+                    <select id="sortDir" oninput="update('glitch')">
+                        <option value="hor">Horizontal</option>
+                        <option value="vert">Vertical</option>
+                    </select>
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left">
+                        <input type="checkbox" class="toggle" id="on-jpeg" checked oninput="update('glitch')">
+                        <span class="sub-title">JPEG / Compression</span>
+                    </div>
+                    <span class="reset-icon" onclick="resetSub('jpeg')">Reset</span>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Block Shift</label> <span id="disp-blockShift" class="val">0</span></div>
+                    <input type="range" id="blockShift" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Block Scramble</label> <span id="disp-blockScramble" class="val">0</span></div>
+                    <input type="range" id="blockScramble" min="0" max="50" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Interlace</label> <span id="disp-interlace" class="val">0</span></div>
+                    <input type="range" id="interlace" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left">
+                        <input type="checkbox" class="toggle" id="on-wave" checked oninput="update('glitch')">
+                        <span class="sub-title">Waveform</span>
+                    </div>
+                    <span class="reset-icon" onclick="resetSub('wave')">Reset</span>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Amplitude</label> <span id="disp-waveAmp" class="val">0</span></div>
+                    <input type="range" id="waveAmp" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Density</label> <span id="disp-waveDensity" class="val">10</span></div>
+                    <input type="range" id="waveDensity" min="1" max="100" value="10" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Noise</label> <span id="disp-waveNoise" class="val">0</span></div>
+                    <input type="range" id="waveNoise" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left">
+                        <input type="checkbox" class="toggle" id="on-rgb" checked oninput="update('glitch')">
+                        <span class="sub-title">Color Offset</span>
+                    </div>
+                    <span class="reset-icon" onclick="resetSub('rgb')">Reset</span>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Red X</label> <span id="disp-offR" class="val">0</span></div>
+                    <input type="range" id="offR" min="-50" max="50" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Green X</label> <span id="disp-offG" class="val">0</span></div>
+                    <input type="range" id="offG" min="-50" max="50" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Blue X</label> <span id="disp-offB" class="val">0</span></div>
+                    <input type="range" id="offB" min="-50" max="50" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Channel Swap</label></div>
+                    <select id="channelSwap" oninput="update('glitch')">
+                        <option value="none">Normal (RGB)</option>
+                        <option value="rbg">RBG</option>
+                        <option value="grb">GRB</option>
+                        <option value="gbr">GBR</option>
+                        <option value="brg">BRG</option>
+                        <option value="bgr">BGR</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="group">
+                <div class="group-header">
+                    <div class="header-left">
+                        <input type="checkbox" class="toggle" id="on-pre" checked oninput="update('pre')">
+                        <span class="group-title">Pre-Process</span>
+                    </div>
+                    <span class="reset-icon" onclick="resetGroup('pre')">Reset</span>
+                </div>
+                
+                <div class="control-row">
+                    <div class="label-row"><label>Brightness</label> <span id="disp-brightness" class="val">0</span></div>
+                    <input type="range" id="brightness" min="-100" max="100" value="0" oninput="update('pre')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Contrast</label> <span id="disp-contrast" class="val">0</span></div>
+                    <input type="range" id="contrast" min="-100" max="100" value="0" oninput="update('pre')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Saturation</label> <span id="disp-saturation" class="val">0</span></div>
+                    <input type="range" id="saturation" min="-100" max="100" value="0" oninput="update('pre')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Blur</label> <span id="disp-blur" class="val">0</span></div>
+                    <input type="range" id="blur" min="0" max="10" value="0" oninput="update('pre')">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewport">
+        <button id="compare-btn" class="float-pill" onclick="toggleCompare()">SHOW ORIGINAL</button>
+        <div id="resolution-display" class="float-pill">0 x 0</div>
+
+        <div id="loading-overlay">
+            <div class="spinner"></div>
+            <span>Processing</span>
+        </div>
+
+        <div id="canvas-wrapper">
+            <div id="canvas-clipper">
+                <canvas id="output-canvas"></canvas>
+                <div id="scanlines" class="fx-layer" style="opacity:0"></div>
+                <div id="scanlines-vert" class="fx-layer" style="opacity:0"></div>
+                <div id="original-overlay"></div> 
+            </div>
+        </div>
+
+        <div id="toolbar">
+            <button class="tool-btn" onclick="fitView()" title="Fit to Screen">Fit</button>
+            <button class="tool-btn" onclick="zoom(0.1)" title="Zoom In">+</button>
+            <button class="tool-btn" onclick="zoom(-0.1)" title="Zoom Out">-</button>
+        </div>
+    </div>
+
+    <div id="sidebar-right" class="sidebar">
+        <div class="scroll-container">
+            
+            <div class="group">
+                <div class="group-header"><span class="group-title">Export / Output</span></div>
+                <button class="btn primary" onclick="downloadImage()">Save Output</button>
+            </div>
+
+            <div class="group" style="border-color: var(--accent);">
+                <div class="group-header">
+                    <span class="group-title">Presets</span>
+                </div>
+                <div class="control-row">
+                    <select id="preset-select" onchange="loadBuiltInPreset()">
+                        <option value="">-- Select Factory Preset --</option>
+                        <option value="cyber">Cyberpunk Terminal</option>
+                        <option value="paper">Vintage Newspaper</option>
+                        <option value="gameboy">Handheld 90s</option>
+                        <option value="mac">Macintosh SE</option>
+                        <option value="cga">CGA (Magenta)</option>
+                        <option value="ghost">Ghost in the Shell</option>
+                        <option value="corrupt">Data Corruption</option>
+                        <option value="sort">Pixel Sorting</option>
+                    </select>
+                </div>
+                <div class="btn-row">
+                    <button class="btn secondary" onclick="document.getElementById('jsonIn').click()">Import .JSON</button>
+                    <button class="btn secondary" onclick="savePreset()">Export .JSON</button>
+                </div>
+                <input type="file" id="jsonIn" accept=".json" style="display:none" onchange="loadUserPreset(this)">
+            </div>
+
+            <div class="group" style="border-color: #666;">
+                <div class="group-header">
+                    <span class="group-title">Settings Code</span>
+                </div>
+                <div class="control-row">
+                    <label class="label-row">Current Code (Share This)</label>
+                    <textarea id="settings-seed" rows="3" readonly></textarea>
+                    <button class="btn secondary" onclick="randomizeAll()">Randomize Chaos</button>
+                </div>
+                <div class="control-row" style="margin-top:10px; padding-top:10px; border-top:1px dashed #333;">
+                    <label class="label-row">Load Code</label>
+                    <input type="text" id="seed-input" placeholder="Paste code here...">
+                    <button class="btn" onclick="applySeedFromInput()">Apply Code</button>
+                </div>
+            </div>
+
+            <div class="group">
+                <div class="group-header">
+                    <div class="header-left">
+                        <input type="checkbox" class="toggle" id="on-dither" checked oninput="update('dither')">
+                        <span class="group-title">Dither Engine</span>
+                    </div>
+                    <span class="reset-icon" onclick="resetGroup('dither')">Reset</span>
+                </div>
+
+                <div class="control-row">
+                    <label class="label-row">Algorithm</label>
+                    <select id="algo" oninput="handleAlgoChange()">
+                        <optgroup label="Simple">
+                            <option value="none" selected>No Dither (Quantize)</option>
+                            <option value="random">Random (White Noise)</option>
+                        </optgroup>
+                        <optgroup label="Ordered">
+                            <option value="bayer4">Bayer 4x4 (Classic)</option>
+                            <option value="bayer2">Bayer 2x2</option>
+                            <option value="bayer8">Bayer 8x8</option>
+                            <option value="cluster4">Cluster Dot 4x4 (Halftone)</option>
+                            <option value="linesH">Lines Horizontal</option>
+                            <option value="linesV">Lines Vertical</option>
+                        </optgroup>
+                        <optgroup label="Error Diffusion">
+                            <option value="floyd">Floyd-Steinberg</option>
+                            <option value="atkinson">Atkinson (Mac)</option>
+                            <option value="stucki">Stucki</option>
+                            <option value="burkes">Burkes</option>
+                            <option value="sierra2">Sierra 2</option>
+                            <option value="sierraLite">Sierra Lite</option>
+                            <option value="jjn">Jarvis, Judice & Ninke</option>
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <div id="serpentine-row" class="control-row" style="display:none; align-items:center; gap:10px;">
+                    <input type="checkbox" id="serpentine" checked oninput="update('dither')">
+                    <label class="label-row" style="margin:0; flex:1">Serpentine Scan (Reduces Artifacts)</label>
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Pixel Scale (Res)</label> <span id="disp-scale" class="val">1</span></div>
+                    <input type="range" id="scale" min="1" max="16" value="1" oninput="update('glitch')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Color Mode / Palette</label></div>
+                    <select id="colorMode" oninput="togglePaletteControls()">
+                        <option value="rgb" selected>RGB Color</option>
+                        <option value="gray">Grayscale</option>
+                        <option value="mono">1-Bit Monochrome</option>
+                        <optgroup label="Hardware Palettes">
+                            <option value="p-gb">Gameboy (4 Greens)</option>
+                            <option value="p-mac">Macintosh SE (B&W)</option>
+                            <option value="p-cga1">CGA 1 (Mag/Cya/Wht)</option>
+                            <option value="p-cga2">CGA 2 (Red/Grn/Yel)</option>
+                            <option value="p-vga">VGA Terminal (Grn)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div id="pal-mono" class="control-row" style="display:none">
+                    <div class="label-row" style="margin-top:5px"><label>Light Color</label> <input type="color" id="col-light" value="#00e5ff" oninput="update('dither')"></div>
+                    <div class="label-row" style="margin-top:5px"><label>Dark Color</label> <input type="color" id="col-dark" value="#0a0a0a" oninput="update('dither')"></div>
+                    <div class="label-row" style="margin-top:10px"><label>Threshold</label> <span id="disp-threshold" class="val">128</span></div>
+                    <input type="range" id="threshold" min="0" max="255" value="128" oninput="update('dither')">
+                </div>
+
+                <div id="pal-rgb" class="control-row">
+                    <div class="label-row"><label>Bit Depth</label> <span id="disp-depth" class="val">32</span></div>
+                    <input type="range" id="depth" min="2" max="32" value="32" oninput="update('dither')">
+                </div>
+
+                <div id="advanced-matrix" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;">
+                    <div class="label-row">
+                        <label>Matrix Editor</label> 
+                        <span class="reset-icon" onclick="resetMatrix()">Default</span>
+                    </div>
+                    <div id="matrix-grid"></div>
+                </div>
+            </div>
+
+            <div class="group">
+                <div class="group-header">
+                    <div class="header-left">
+                        <input type="checkbox" class="toggle" id="on-post" checked oninput="update('post')">
+                        <span class="group-title">Post-FX</span>
+                    </div>
+                    <span class="reset-icon" onclick="resetGroup('post')">Reset</span>
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Bloom Mode</label></div>
+                    <select id="bloomMix" oninput="update('post')">
+                        <option value="screen">Add / Screen (Glow)</option>
+                        <option value="overlay">Overlay (Contrast)</option>
+                        <option value="source-over">Normal (Soft)</option>
+                    </select>
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Bloom Intensity</label> <span id="disp-bloom" class="val">0</span></div>
+                    <input type="range" id="bloom" min="0" max="500" value="0" oninput="update('post')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Bloom Radius</label> <span id="disp-bloomRadius" class="val">0</span></div>
+                    <input type="range" id="bloomRadius" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Scanlines (Horizontal)</label> <span id="disp-scanlineOp" class="val">0</span></div>
+                    <input type="range" id="scanlineOp" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Scanlines (Vertical)</label> <span id="disp-scanlineVertOp" class="val">0</span></div>
+                    <input type="range" id="scanlineVertOp" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <button class="btn danger" onclick="globalReset()">GLOBAL RESET</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DEFAULTS ---
+        const SLIDER_DEFAULTS = {
+            brightness: 0, contrast: 0, saturation: 0, blur: 0,
+            blockShift: 0, blockScramble: 0, interlace: 0,
+            waveAmp: 0, waveDensity: 10, waveNoise: 0,
+            offR: 0, offG: 0, offB: 0,
+            sortThresh: 0, 
+            scale: 1, threshold: 128, depth: 32,
+            bloom: 0, bloomRadius: 0, scanlineOp: 0, scanlineVertOp: 0
+        };
+
+        // --- PALETTES ---
+        const HARDWARE_PALETTES = {
+            "p-gb":   [{r:15,g:56,b:15}, {r:48,g:98,b:48}, {r:139,g:172,b:15}, {r:155,g:188,b:15}],
+            "p-mac":  [{r:0,g:0,b:0}, {r:255,g:255,b:255}],
+            "p-cga1": [{r:0,g:0,b:0}, {r:85,g:255,b:255}, {r:255,g:85,b:255}, {r:255,g:255,b:255}],
+            "p-cga2": [{r:0,g:0,b:0}, {r:85,g:255,b:85}, {r:255,g:85,b:85}, {r:255,g:255,b:85}],
+            "p-vga":  [{r:0,g:0,b:0}, {r:0,g:170,b:0}, {r:0,g:255,b:0}]
+        };
+
+        // --- PRESETS ---
+        const FACTORY_PRESETS = {
+            cyber: {
+                active: { glitch: true, pre: true, dither: true, post: true },
+                glitch: { seed: 1337, sortThresh: 0, blockShift: 0, blockScramble: 0, interlace: 0, swap: 'none', waveAmp: 0, offR: 2, offG: -2, offB: 0 },
+                pre: { brightness: 10, contrast: 40, saturation: -20, blur: 0 },
+                dither: { algo: 'bayer4', scale: 3, colorMode: 'mono', threshold: 110, light: '#00e5ff', dark: '#0a0a0a' },
+                post: { bloom: 60, bloomRadius: 20, bloomMix: 'screen', scanlineOp: 30, scanlineVertOp: 0 }
+            },
+            sort: {
+                 active: { glitch: true, pre: true, dither: false, post: true },
+                 glitch: { seed: 1337, sortThresh: 60, sortDir: 'hor' },
+                 pre: { brightness: 0, contrast: 20 },
+                 dither: { algo: 'none', scale: 1, colorMode: 'rgb' },
+                 post: { bloom: 20, bloomRadius: 10, bloomMix: 'screen' }
+            },
+            gameboy: {
+                active: { glitch: false, pre: true, dither: true, post: true },
+                glitch: { seed: 0 },
+                pre: { brightness: 0, contrast: 15 },
+                dither: { algo: 'bayer4', scale: 4, colorMode: 'p-gb', depth: 4 },
+                post: { bloom: 0, scanlineOp: 15, scanlineVertOp: 15 }
+            },
+            mac: {
+                active: { glitch: false, pre: true, dither: true, post: false },
+                glitch: { seed: 0 },
+                pre: { brightness: 5, contrast: 25 },
+                dither: { algo: 'atkinson', scale: 2, colorMode: 'p-mac' },
+                post: { bloom: 0 }
+            },
+            cga: {
+                 active: { glitch: false, pre: true, dither: true, post: true },
+                 glitch: { seed: 0 },
+                 pre: { contrast: 30, saturation: 20 },
+                 dither: { algo: 'cluster4', scale: 3, colorMode: 'p-cga1' },
+                 post: { bloom: 15, bloomRadius: 5, bloomMix: 'overlay', scanlineOp: 10 }
+            },
+            corrupt: {
+                active: { glitch: true, pre: true, dither: true, post: true },
+                glitch: { seed: 500, sortThresh: 80, blockShift: 45, blockScramble: 10, interlace: 30, swap: 'rbg', waveAmp: 20, waveDensity: 5, waveNoise: 50, offR: 10, offG: 0, offB: -10 },
+                pre: { brightness: 0, contrast: 50, saturation: 0, blur: 0 },
+                dither: { algo: 'bayer8', scale: 4, colorMode: 'mono', threshold: 128, light: '#ff0055', dark: '#0a0a0a' },
+                post: { bloom: 20, bloomRadius: 30, bloomMix: 'screen', scanlineOp: 50, scanlineVertOp: 10 }
+            },
+            paper: {
+                active: { glitch: false, pre: true, dither: true, post: true },
+                glitch: { seed: 0, blockShift: 0 },
+                pre: { brightness: 5, contrast: 15, saturation: 0, blur: 2 },
+                dither: { algo: 'cluster4', scale: 2, colorMode: 'mono', threshold: 140, light: '#e3d6c1', dark: '#3b3228' },
+                post: { bloom: 10, bloomRadius: 8, bloomMix: 'overlay', scanlineOp: 0, scanlineVertOp: 0 }
+            },
+        };
+
+        // --- CONSTANTS ---
+        const bayer4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+        const bayer2 = [0, 2, 3, 1];
+        const bayer8 = [0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54, 22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5, 37, 63, 31, 55, 23, 61, 29, 53, 21];
+        const cluster4 = [12, 5, 6, 13, 4, 0, 1, 7, 11, 3, 2, 8, 15, 10, 9, 14]; 
+        const linesH = [0, 0, 0, 0, 8, 8, 8, 8, 16, 16, 16, 16, 8, 8, 8, 8]; 
+        const linesV = [0, 8, 16, 8, 0, 8, 16, 8, 0, 8, 16, 8, 0, 8, 16, 8]; 
+
+        const kernels = {
+            floyd: [[1,0,7], [-1,1,3], [0,1,5], [1,1,1]],
+            atkinson: [[1,0,1], [2,0,1], [-1,1,1], [0,1,1], [1,1,1], [0,2,1]],
+            stucki: [[1,0,8], [2,0,4], [-2,1,2], [-1,1,4], [0,1,8], [1,1,4], [2,1,2], [-2,2,1], [-1,2,2], [0,2,4], [1,2,2], [2,2,1]],
+            burkes: [[1,0,8], [2,0,4], [-2,1,2], [-1,1,4], [0,1,8], [1,1,4], [2,1,2]],
+            sierra2: [[1,0,4], [2,0,3], [-2,1,1], [-1,1,2], [0,1,3], [1,1,2], [2,1,1], [-1,2,2], [0,2,3], [1,2,2]],
+            sierraLite: [[1,0,2], [-1,1,1], [0,1,1]],
+            jjn: [[1,0,7], [2,0,5], [-2,1,3], [-1,1,5], [0,1,7], [1,1,5], [2,1,3], [-2,2,1], [-1,2,3], [0,2,5], [1,2,3], [2,2,1]]
+        };
+
+        // --- STATE ---
+        let srcImage = null;
+        let procCanvas = document.createElement('canvas');
+        let procCtx = procCanvas.getContext('2d', { willReadFrequently: true });
+        
+        let viewState = { scale: 1, x: 0, y: 0 };
+        let isDragging = false, lastMouse = {x:0, y:0};
+
+        // --- INIT ---
+        window.onload = () => {
+            generateMatrixGrid();
+            setupViewport();
+            handleAlgoChange();
+            togglePaletteControls();
+
+            // Double Click Reset
+            document.querySelectorAll('input[type="range"]').forEach(input => {
+                input.addEventListener('dblclick', function() {
+                    if(SLIDER_DEFAULTS.hasOwnProperty(this.id)) {
+                        this.value = SLIDER_DEFAULTS[this.id];
+                        this.dispatchEvent(new Event('input'));
+                    }
+                });
+            });
+
+            // Paste Handler
+            document.addEventListener('paste', (e) => {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        const r = new FileReader();
+                        r.onload = (ev) => {
+                            srcImage = new Image();
+                            srcImage.onload = () => {
+                                document.getElementById('original-overlay').style.backgroundImage = `url(${ev.target.result})`;
+                                processImage();
+                            };
+                            srcImage.src = ev.target.result;
+                        };
+                        r.readAsDataURL(blob);
+                        break;
+                    }
+                }
+            });
+        };
+
+        // --- HELPERS ---
+        function seededRandom(seed) {
+            var x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function toggleCompare() {
+            const btn = document.getElementById('compare-btn');
+            const ov = document.getElementById('original-overlay');
+            const isVisible = ov.classList.contains('visible');
+            
+            if(isVisible) {
+                ov.classList.remove('visible');
+                btn.innerText = "SHOW ORIGINAL";
+            } else {
+                ov.classList.add('visible');
+                btn.innerText = "SHOW DITHERED";
+            }
+        }
+
+        function stepSeed(dir) {
+            const el = document.getElementById('glitchSeed');
+            el.value = parseInt(el.value) + dir;
+            update('glitch');
+        }
+
+        function findClosestPaletteColor(r, g, b, palette) {
+            let minDist = Infinity;
+            let closest = palette[0];
+            for(let c of palette) {
+                let dist = (r - c.r)**2 + (g - c.g)**2 + (b - c.b)**2;
+                if(dist < minDist) {
+                    minDist = dist;
+                    closest = c;
+                }
+            }
+            return closest;
+        }
+
+        // --- MAIN PIPELINE ---
+        let scheduleTimeout;
+        function update(stage) {
+            updateLabels();
+
+            if(stage === 'view') { renderToViewport(); return; }
+            if(stage === 'post') { composeOutput(); return; }
+
+            clearTimeout(scheduleTimeout);
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            scheduleTimeout = setTimeout(() => {
+                processImage();
+                document.getElementById('loading-overlay').style.display = 'none';
+                generateSettingsSeed(); // Update seed display after processing
+            }, 50);
+        }
+
+        function processImage() {
+            if(!srcImage) return;
+
+            const pixelScale = parseInt(document.getElementById('scale').value);
+            const w = Math.floor(srcImage.width / pixelScale);
+            const h = Math.floor(srcImage.height / pixelScale);
+            
+            const MAX_DIM = 800; 
+            let scaleFactor = 1;
+            if(w > MAX_DIM || h > MAX_DIM) scaleFactor = Math.min(MAX_DIM/w, MAX_DIM/h);
+            const finalW = Math.floor(w * scaleFactor);
+            const finalH = Math.floor(h * scaleFactor);
+
+            procCanvas.width = finalW;
+            procCanvas.height = finalH;
+            
+            procCtx.drawImage(srcImage, 0, 0, finalW, finalH);
+            let imgData = procCtx.getImageData(0, 0, finalW, finalH);
+            let data = imgData.data;
+
+            if(document.getElementById('on-pre').checked) applyPreProcess(data);
+            if(document.getElementById('on-glitch').checked) applyGlitch(data, finalW, finalH);
+            if(document.getElementById('on-dither').checked) applyDithering(data, finalW, finalH);
+
+            procCtx.putImageData(imgData, 0, 0);
+            renderToViewport();
+        }
+
+        function renderToViewport() {
+            const outC = document.getElementById('output-canvas');
+            const clip = document.getElementById('canvas-clipper');
+            const pixelScale = parseInt(document.getElementById('scale').value);
+            
+            const newW = procCanvas.width * pixelScale;
+            const newH = procCanvas.height * pixelScale;
+
+            outC.width = newW;
+            outC.height = newH;
+            clip.style.width = newW + 'px';
+            clip.style.height = newH + 'px';
+            
+            // Update Resolution Display
+            document.getElementById('resolution-display').innerText = `${procCanvas.width} x ${procCanvas.height}`;
+
+            if(!window.hasFit) { fitView(); window.hasFit = true; }
+
+            composeOutput();
+        }
+
+        function composeOutput() {
+            const outC = document.getElementById('output-canvas');
+            const ctx = outC.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.filter = 'none';
+            ctx.globalAlpha = 1.0;
+            ctx.drawImage(procCanvas, 0, 0, outC.width, outC.height);
+
+            if(document.getElementById('on-post').checked) {
+                const bloom = parseInt(document.getElementById('bloom').value);
+                const radius = parseInt(document.getElementById('bloomRadius').value);
+                const mix = document.getElementById('bloomMix').value;
+                
+                if(bloom > 0) {
+                    const tempC = document.createElement('canvas');
+                    tempC.width = outC.width / 4; 
+                    tempC.height = outC.height / 4;
+                    const tempCtx = tempC.getContext('2d');
+                    tempCtx.drawImage(outC, 0, 0, tempC.width, tempC.height);
+                    
+                    ctx.save();
+                    ctx.globalCompositeOperation = mix;
+                    ctx.filter = `blur(${radius}px)`;
+                    ctx.globalAlpha = bloom/500;
+                    ctx.drawImage(tempC, 0, 0, outC.width, outC.height);
+                    ctx.restore();
+                }
+
+                document.getElementById('scanlines').style.opacity = document.getElementById('scanlineOp').value / 100;
+                document.getElementById('scanlines-vert').style.opacity = document.getElementById('scanlineVertOp').value / 100;
+            } else {
+                document.getElementById('scanlines').style.opacity = 0;
+                document.getElementById('scanlines-vert').style.opacity = 0;
+            }
+        }
+
+        // --- EFFECTS IMPLEMENTATIONS ---
+
+        function applyPreProcess(data) {
+            const bri = parseInt(document.getElementById('brightness').value);
+            const con = parseInt(document.getElementById('contrast').value);
+            const sat = parseInt(document.getElementById('saturation').value);
+            const blur = parseInt(document.getElementById('blur').value);
+
+            if(blur > 0) {
+                procCtx.filter = `blur(${blur/2}px)`;
+                procCtx.drawImage(procCanvas, 0, 0);
+                data.set(procCtx.getImageData(0,0,procCanvas.width,procCanvas.height).data);
+                procCtx.filter = 'none'; 
+            }
+
+            const cFactor = (259 * (con + 255)) / (255 * (259 - con));
+            
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i], g = data[i+1], b = data[i+2];
+
+                r += bri; g += bri; b += bri;
+                r = cFactor * (r - 128) + 128;
+                g = cFactor * (g - 128) + 128;
+                b = cFactor * (b - 128) + 128;
+
+                if (sat !== 0) {
+                    const lum = 0.299*r + 0.587*g + 0.114*b;
+                    const s = 1 + (sat/100);
+                    r = lum + (r - lum) * s;
+                    g = lum + (g - lum) * s;
+                    b = lum + (b - lum) * s;
+                }
+                data[i] = clamp(r); data[i+1] = clamp(g); data[i+2] = clamp(b);
+            }
+        }
+
+        function applyGlitch(data, w, h) {
+            let seed = parseInt(document.getElementById('glitchSeed').value);
+            
+            const useJpeg = document.getElementById('on-jpeg').checked;
+            const useSort = document.getElementById('on-sort').checked;
+            const useWave = document.getElementById('on-wave').checked;
+            const useRgb  = document.getElementById('on-rgb').checked;
+
+            const bShift = parseInt(document.getElementById('blockShift').value);
+            const bScramble = parseInt(document.getElementById('blockScramble').value);
+            const interlace = parseInt(document.getElementById('interlace').value);
+            
+            const swapMode = document.getElementById('channelSwap').value;
+            const waveAmp = parseInt(document.getElementById('waveAmp').value);
+            const waveDen = parseInt(document.getElementById('waveDensity').value);
+            const waveNoi = parseInt(document.getElementById('waveNoise').value);
+
+            const offR = parseInt(document.getElementById('offR').value);
+            const offG = parseInt(document.getElementById('offG').value);
+            const offB = parseInt(document.getElementById('offB').value);
+
+            const sortThresh = parseInt(document.getElementById('sortThresh').value);
+            const sortDir = document.getElementById('sortDir').value;
+
+            if (useSort && sortThresh > 0) {
+                const thresholdVal = sortThresh * 2.55; 
+                if (sortDir === 'hor') {
+                    for(let y=0; y<h; y++) {
+                        let span = [];
+                        let spanStart = -1;
+                        for(let x=0; x<w; x++) {
+                            const idx = (y*w + x)*4;
+                            const lum = 0.299*data[idx] + 0.587*data[idx+1] + 0.114*data[idx+2];
+                            
+                            if (lum > thresholdVal) {
+                                if (spanStart === -1) spanStart = x;
+                                span.push({r:data[idx], g:data[idx+1], b:data[idx+2], a:data[idx+3], l:lum});
+                            } else {
+                                if (spanStart !== -1) {
+                                    span.sort((a,b) => a.l - b.l); 
+                                    for(let k=0; k<span.length; k++) {
+                                        const tIdx = (y*w + (spanStart+k))*4;
+                                        data[tIdx] = span[k].r; data[tIdx+1] = span[k].g; data[tIdx+2] = span[k].b;
+                                    }
+                                    span = [];
+                                    spanStart = -1;
+                                }
+                            }
+                        }
+                        if (spanStart !== -1) {
+                            span.sort((a,b) => a.l - b.l);
+                            for(let k=0; k<span.length; k++) {
+                                const tIdx = (y*w + (spanStart+k))*4;
+                                data[tIdx] = span[k].r; data[tIdx+1] = span[k].g; data[tIdx+2] = span[k].b;
+                            }
+                        }
+                    }
+                }
+            }
+
+            const src = new Uint8ClampedArray(data);
+            const getPx = (x, y) => {
+                if(x<0) x=0; if(x>=w) x=w-1;
+                if(y<0) y=0; if(y>=h) y=h-1;
+                return (y*w + x)*4;
+            };
+
+            for(let y=0; y<h; y++) {
+                let waveX = 0;
+                if(useWave && waveAmp > 0) {
+                    const noise = seededRandom(seed + y) * (waveNoi/10);
+                    waveX = Math.floor(Math.sin(y * (waveDen/1000) + seed) * waveAmp * (1+noise));
+                }
+
+                for(let x=0; x<w; x++) {
+                    let srcX = x + waveX;
+                    let srcY = y;
+
+                    if(useJpeg) {
+                        if(bShift > 0) {
+                            const blockSize = 32;
+                            if(seededRandom(seed + Math.floor(y/blockSize)) < (bShift/200)) {
+                                srcX += Math.floor((seededRandom(seed + y)-0.5) * 100);
+                            }
+                        }
+                        if(interlace > 0 && y % 4 === 0) {
+                            if(seededRandom(seed + y) < (interlace/100)) srcX += 10;
+                        }
+                    }
+
+                    let iR, iG, iB;
+                    if(useRgb) {
+                        iR = getPx(srcX + offR, srcY);
+                        iG = getPx(srcX + offG, srcY);
+                        iB = getPx(srcX + offB, srcY);
+                    } else {
+                        const px = getPx(srcX, srcY);
+                        iR = px; iG = px; iB = px;
+                    }
+
+                    let r = src[iR];
+                    let g = src[iG+1];
+                    let b = src[iB+2];
+
+                    if(useRgb && swapMode !== 'none') {
+                        let tr=r, tg=g, tb=b;
+                        if(swapMode==='rbg'){ g=tb; b=tg; }
+                        else if(swapMode==='grb'){ r=tg; g=tr; }
+                        else if(swapMode==='gbr'){ r=tg; g=tb; b=tr; }
+                        else if(swapMode==='brg'){ r=tb; g=tr; b=tg; }
+                        else if(swapMode==='bgr'){ r=tb; b=tr; }
+                    }
+
+                    const idx = (y*w + x)*4;
+                    data[idx] = r; data[idx+1] = g; data[idx+2] = b;
+                }
+            }
+
+            if(useJpeg && bScramble > 0) {
+                const count = Math.floor((bScramble/50) * 20);
+                const bSize = 64;
+                for(let i=0; i<count; i++) {
+                    const sx = Math.floor(seededRandom(seed++) * (w-bSize));
+                    const sy = Math.floor(seededRandom(seed++) * (h-bSize));
+                    const dx = Math.floor(seededRandom(seed++) * (w-bSize));
+                    const dy = Math.floor(seededRandom(seed++) * (h-bSize));
+                    
+                    for(let by=0; by<bSize; by++) {
+                        for(let bx=0; bx<bSize; bx++) {
+                            const sIdx = ((sy+by)*w + (sx+bx))*4;
+                            const dIdx = ((dy+by)*w + (dx+bx))*4;
+                            const r=data[sIdx], g=data[sIdx+1], b=data[sIdx+2];
+                            data[sIdx] = data[dIdx]; data[sIdx+1] = data[dIdx+1]; data[sIdx+2] = data[dIdx+2];
+                            data[dIdx] = r; data[dIdx+1] = g; data[dIdx+2] = b;
+                        }
+                    }
+                }
+            }
+        }
+
+        function applyDithering(data, w, h) {
+            const algo = document.getElementById('algo').value;
+            const mode = document.getElementById('colorMode').value;
+            const depth = parseInt(document.getElementById('depth').value);
+            const threshold = parseInt(document.getElementById('threshold').value);
+            
+            const isErrorDiff = (algo !== 'none' && algo !== 'random' && !algo.startsWith('bayer') && !algo.startsWith('cluster') && !algo.startsWith('lines'));
+            const isOrdered = !isErrorDiff && algo !== 'none' && algo !== 'random';
+            const serpentine = document.getElementById('serpentine').checked;
+
+            let matrix = bayer4;
+            let mSize = 4;
+            if (algo === 'bayer2') { matrix = bayer2; mSize = 2; }
+            if (algo === 'bayer8') { matrix = bayer8; mSize = 8; }
+            if (algo === 'cluster4') { matrix = cluster4; mSize = 4; }
+            if (algo === 'linesH') { matrix = linesH; mSize = 4; }
+            if (algo === 'linesV') { matrix = linesV; mSize = 4; }
+            if (algo === 'bayer4') { 
+                const inputs = document.querySelectorAll('.m-cell');
+                matrix = Array.from(inputs).map(inp => parseInt(inp.value));
+            }
+
+            let kernel = [];
+            let kDiv = 1;
+            if(isErrorDiff) {
+                kernel = kernels[algo];
+                kDiv = kernel.reduce((acc, k) => acc + k[2], 0);
+            }
+
+            const light = hexToRgb(document.getElementById('col-light').value);
+            const dark = hexToRgb(document.getElementById('col-dark').value);
+            const hwPalette = HARDWARE_PALETTES[mode];
+
+            for (let y = 0; y < h; y++) {
+                const isReverse = serpentine && (y % 2 !== 0);
+                const startX = isReverse ? w - 1 : 0;
+                const endX = isReverse ? -1 : w;
+                const stepX = isReverse ? -1 : 1;
+
+                for (let x = startX; x !== endX; x += stepX) {
+                    const idx = (y * w + x) * 4;
+                    if (data[idx+3] < 10) continue;
+
+                    let r = data[idx], g = data[idx+1], b = data[idx+2];
+                    
+                    if (algo === 'random') {
+                        const noise = (Math.random() - 0.5) * 60;
+                        r += noise; g += noise; b += noise;
+                    } else if (isOrdered) {
+                        const mapVal = matrix[(y % mSize) * mSize + (x % mSize)];
+                        const norm = (mapVal / (mSize*mSize)) - 0.5;
+                        const spread = 255 / (depth < 4 ? 2 : 4);
+                        const mod = norm * spread;
+                        r += mod; g += mod; b += mod;
+                    }
+
+                    let nr, ng, nb;
+                    let er = 0, eg = 0, eb = 0;
+
+                    if (mode === 'mono') {
+                        const lum = 0.299*r + 0.587*g + 0.114*b;
+                        const val = lum >= threshold ? 1 : 0;
+                        nr = val ? light.r : dark.r;
+                        ng = val ? light.g : dark.g;
+                        nb = val ? light.b : dark.b;
+                        er = eg = eb = (lum - (val ? 255 : 0));
+                    } else if (mode === 'gray') {
+                         const lum = 0.299*r + 0.587*g + 0.114*b;
+                         const step = 255 / (depth - 1);
+                         const qLum = Math.round(lum / step) * step;
+                         nr = ng = nb = qLum;
+                         er = eg = eb = (lum - qLum);
+                    } else if (hwPalette) {
+                        const match = findClosestPaletteColor(r, g, b, hwPalette);
+                        nr = match.r; ng = match.g; nb = match.b;
+                        er = (r - nr); eg = (g - ng); eb = (b - nb);
+                    } else {
+                        const step = 255 / (depth - 1);
+                        nr = Math.round(r / step) * step;
+                        ng = Math.round(g / step) * step;
+                        nb = Math.round(b / step) * step;
+                        er = (r - nr); eg = (g - ng); eb = (b - nb);
+                    }
+
+                    data[idx] = nr; data[idx+1] = ng; data[idx+2] = nb;
+
+                    if (isErrorDiff) {
+                        for (let k = 0; k < kernel.length; k++) {
+                            const kx = isReverse ? -kernel[k][0] : kernel[k][0]; 
+                            const ky = kernel[k][1];
+                            const kFactor = kernel[k][2] / kDiv;
+                            const nx = x + kx, ny = y + ky;
+                            if (nx >= 0 && nx < w && ny < h) {
+                                const nIdx = (ny * w + nx) * 4;
+                                data[nIdx]   += er * kFactor;
+                                data[nIdx+1] += eg * kFactor;
+                                data[nIdx+2] += eb * kFactor;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- UTILS ---
+        function getSettingsState() {
+            return {
+                active: {
+                    glitch: document.getElementById('on-glitch').checked,
+                    sort: document.getElementById('on-sort').checked,
+                    jpeg: document.getElementById('on-jpeg').checked,
+                    wave: document.getElementById('on-wave').checked,
+                    rgb: document.getElementById('on-rgb').checked,
+                    pre: document.getElementById('on-pre').checked,
+                    dither: document.getElementById('on-dither').checked,
+                    post: document.getElementById('on-post').checked
+                },
+                glitch: {
+                    seed: document.getElementById('glitchSeed').value,
+                    sortThresh: document.getElementById('sortThresh').value,
+                    sortDir: document.getElementById('sortDir').value,
+                    blockShift: document.getElementById('blockShift').value,
+                    blockScramble: document.getElementById('blockScramble').value,
+                    interlace: document.getElementById('interlace').value,
+                    swap: document.getElementById('channelSwap').value,
+                    waveAmp: document.getElementById('waveAmp').value,
+                    waveDensity: document.getElementById('waveDensity').value,
+                    waveNoise: document.getElementById('waveNoise').value,
+                    offR: document.getElementById('offR').value,
+                    offG: document.getElementById('offG').value,
+                    offB: document.getElementById('offB').value
+                },
+                pre: {
+                    brightness: document.getElementById('brightness').value,
+                    contrast: document.getElementById('contrast').value,
+                    saturation: document.getElementById('saturation').value,
+                    blur: document.getElementById('blur').value
+                },
+                dither: {
+                    algo: document.getElementById('algo').value,
+                    scale: document.getElementById('scale').value,
+                    colorMode: document.getElementById('colorMode').value,
+                    threshold: document.getElementById('threshold').value,
+                    depth: document.getElementById('depth').value,
+                    light: document.getElementById('col-light').value,
+                    dark: document.getElementById('col-dark').value
+                },
+                post: {
+                    bloom: document.getElementById('bloom').value,
+                    bloomRadius: document.getElementById('bloomRadius').value,
+                    bloomMix: document.getElementById('bloomMix').value,
+                    scanlineOp: document.getElementById('scanlineOp').value,
+                    scanlineVertOp: document.getElementById('scanlineVertOp').value
+                }
+            };
+        }
+
+        function generateSettingsSeed() {
+            const state = getSettingsState();
+            const json = JSON.stringify(state);
+            const b64 = btoa(json);
+            document.getElementById('settings-seed').value = b64;
+        }
+
+        function applySeedFromInput() {
+            const seed = document.getElementById('seed-input').value.trim();
+            if(!seed) return;
+            try {
+                const json = atob(seed);
+                const state = JSON.parse(json);
+                applySettingsState(state);
+            } catch(e) {
+                alert("Invalid settings code!");
+            }
+        }
+
+        function randomizeAll() {
+            // Apply Chaos
+            document.getElementById('on-glitch').checked = Math.random() > 0.3;
+            document.getElementById('on-sort').checked = Math.random() > 0.5;
+            document.getElementById('on-jpeg').checked = Math.random() > 0.5;
+            document.getElementById('on-wave').checked = Math.random() > 0.5;
+            document.getElementById('on-rgb').checked = Math.random() > 0.5;
+            
+            document.getElementById('blockShift').value = Math.random() * 50;
+            document.getElementById('waveAmp').value = Math.random() * 30;
+            document.getElementById('sortThresh').value = Math.random() * 80;
+            document.getElementById('bloom').value = Math.random() * 100;
+            document.getElementById('scale').value = Math.floor(Math.random() * 6) + 1;
+            
+            const algos = ['bayer4','atkinson','floyd','cluster4','linesH'];
+            document.getElementById('algo').value = algos[Math.floor(Math.random()*algos.length)];
+            
+            update('glitch');
+        }
+
+        function applySettingsState(s) {
+            if(s.active) {
+                document.getElementById('on-glitch').checked = s.active.glitch;
+                document.getElementById('on-sort').checked = s.active.sort;
+                document.getElementById('on-jpeg').checked = s.active.jpeg;
+                document.getElementById('on-wave').checked = s.active.wave;
+                document.getElementById('on-rgb').checked = s.active.rgb;
+                document.getElementById('on-pre').checked = s.active.pre;
+                document.getElementById('on-dither').checked = s.active.dither;
+                document.getElementById('on-post').checked = s.active.post;
+            }
+
+            if(s.glitch) {
+                for(let k in s.glitch) {
+                    const el = document.getElementById(k === 'seed' ? 'glitchSeed' : (k === 'swap' ? 'channelSwap' : k));
+                    if(el) el.value = s.glitch[k];
+                }
+            }
+            if(s.pre) {
+                for(let k in s.pre) document.getElementById(k).value = s.pre[k];
+            }
+            if(s.dither) {
+                for(let k in s.dither) {
+                    const el = document.getElementById(k === 'light' ? 'col-light' : (k === 'dark' ? 'col-dark' : k));
+                    if(el) el.value = s.dither[k];
+                }
+                handleAlgoChange(); togglePaletteControls();
+            }
+            if(s.post) {
+                for(let k in s.post) {
+                    const el = document.getElementById(k);
+                    if(el) el.value = s.post[k];
+                }
+            }
+            update('glitch');
+        }
+
+        function loadBuiltInPreset() {
+            const key = document.getElementById('preset-select').value;
+            if(FACTORY_PRESETS[key]) applySettingsState(FACTORY_PRESETS[key]);
+        }
+
+        function savePreset() {
+            const blob = new Blob([JSON.stringify(getSettingsState(), null, 2)], {type: "application/json"});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "dither_preset.json";
+            a.click();
+        }
+
+        function loadUserPreset(input) {
+            const f = input.files[0];
+            if(!f) return;
+            const r = new FileReader();
+            r.onload = (e) => applySettingsState(JSON.parse(e.target.result));
+            r.readAsText(f);
+        }
+
+        document.getElementById('fileIn').addEventListener('change', (e) => {
+            const f = e.target.files[0];
+            if(!f) return;
+            const r = new FileReader();
+            r.onload = (ev) => {
+                srcImage = new Image();
+                srcImage.onload = () => {
+                    document.getElementById('original-overlay').style.backgroundImage = `url(${ev.target.result})`;
+                    processImage();
+                };
+                srcImage.src = ev.target.result;
+            };
+            r.readAsDataURL(f);
+        });
+
+        function setupViewport() {
+            const vp = document.getElementById('viewport');
+            vp.addEventListener('wheel', (e) => { e.preventDefault(); zoom(e.deltaY > 0 ? -0.1 : 0.1); });
+            vp.addEventListener('mousedown', (e) => { isDragging = true; lastMouse = { x: e.clientX, y: e.clientY }; vp.style.cursor = 'grabbing'; });
+            window.addEventListener('mouseup', () => { isDragging = false; vp.style.cursor = 'default'; });
+            window.addEventListener('mousemove', (e) => {
+                if(!isDragging) return;
+                viewState.x += e.clientX - lastMouse.x;
+                viewState.y += e.clientY - lastMouse.y;
+                lastMouse = { x: e.clientX, y: e.clientY };
+                updateTransform();
+            });
+        }
+
+        function fitView() {
+            const vp = document.getElementById('viewport');
+            const clip = document.getElementById('canvas-clipper');
+            if(parseInt(clip.style.width) === 0) return;
+            const scale = Math.min((vp.clientWidth-40)/parseInt(clip.style.width), (vp.clientHeight-40)/parseInt(clip.style.height));
+            viewState.scale = scale;
+            viewState.x = (vp.clientWidth - (parseInt(clip.style.width) * scale)) / 2;
+            viewState.y = (vp.clientHeight - (parseInt(clip.style.height) * scale)) / 2;
+            updateTransform();
+        }
+
+        function zoom(amt) {
+            viewState.scale = Math.max(0.1, viewState.scale + amt);
+            updateTransform();
+        }
+        function updateTransform() {
+            document.getElementById('canvas-wrapper').style.transform = `translate(${viewState.x}px, ${viewState.y}px) scale(${viewState.scale})`;
+        }
+
+        function handleAlgoChange() {
+            const v = document.getElementById('algo').value;
+            const isErrorDiff = (v !== 'none' && v !== 'random' && !v.startsWith('bayer') && !v.startsWith('cluster') && !v.startsWith('lines'));
+            document.getElementById('advanced-matrix').style.display = (v === 'bayer4') ? 'block' : 'none';
+            document.getElementById('serpentine-row').style.display = isErrorDiff ? 'flex' : 'none';
+            update('dither');
+        }
+        function togglePaletteControls() {
+            const m = document.getElementById('colorMode').value;
+            document.getElementById('pal-mono').style.display = (m === 'mono') ? 'block' : 'none';
+            document.getElementById('pal-rgb').style.display = (m === 'rgb' || m === 'gray') ? 'block' : 'none';
+            update('dither');
+        }
+        function updateLabels() {
+            document.querySelectorAll('input[type="range"]').forEach(el => {
+                const d = document.getElementById('disp-' + el.id);
+                if(d) d.innerText = el.value;
+            });
+        }
+        function generateMatrixGrid() {
+            const g = document.getElementById('matrix-grid');
+            g.innerHTML = '';
+            bayer4.forEach((val, i) => {
+                const inp = document.createElement('input');
+                inp.type = 'number'; inp.className = 'm-cell'; inp.value = val;
+                inp.oninput = () => update('dither');
+                g.appendChild(inp);
+            });
+        }
+        function resetMatrix() { document.querySelectorAll('.m-cell').forEach((c, i) => c.value = bayer4[i]); update('dither'); }
+        function clamp(v) { return Math.max(0, Math.min(255, v)); }
+        function hexToRgb(hex) {
+            return { r: parseInt(hex.slice(1,3), 16), g: parseInt(hex.slice(3,5), 16), b: parseInt(hex.slice(5,7), 16) };
+        }
+        
+        function globalReset() {
+            resetGroup('pre');
+            resetGroup('dither');
+            resetGroup('post');
+            resetGroup('glitch');
+        }
+
+        function resetGroup(grp) {
+            if(grp === 'pre') { document.getElementById('brightness').value=0; document.getElementById('contrast').value=0; document.getElementById('saturation').value=0; document.getElementById('blur').value=0; update('pre'); }
+            if(grp === 'post') { document.getElementById('bloom').value=0; document.getElementById('scanlineOp').value=0; document.getElementById('scanlineVertOp').value=0; document.getElementById('bloomMix').value='screen'; update('post'); }
+            if(grp === 'dither') { document.getElementById('scale').value=1; document.getElementById('algo').value='none'; document.getElementById('colorMode').value='rgb'; document.getElementById('depth').value=32; update('glitch'); } 
+            if(grp === 'glitch') { 
+                resetSub('jpeg'); resetSub('wave'); resetSub('rgb'); resetSub('sort');
+                document.getElementById('glitchSeed').value = 1337;
+                update('glitch');
+            }
+        }
+
+        function resetSub(sub) {
+            if(sub === 'sort') {
+                 document.getElementById('sortThresh').value=0;
+                 document.getElementById('sortDir').value='hor';
+            }
+            if(sub === 'jpeg') {
+                 document.getElementById('blockShift').value=0;
+                 document.getElementById('blockScramble').value=0;
+                 document.getElementById('interlace').value=0;
+            }
+            if(sub === 'wave') {
+                 document.getElementById('waveAmp').value=0;
+                 document.getElementById('waveDensity').value=10;
+                 document.getElementById('waveNoise').value=0;
+            }
+            if(sub === 'rgb') {
+                 document.getElementById('offR').value=0;
+                 document.getElementById('offG').value=0;
+                 document.getElementById('offB').value=0;
+                 document.getElementById('channelSwap').value='none';
+            }
+            update('glitch');
+        }
+
+        function downloadImage() {
+            // Re-composite including Scanlines for download
+            const outC = document.getElementById('output-canvas');
+            const saveC = document.createElement('canvas');
+            saveC.width = outC.width;
+            saveC.height = outC.height;
+            const ctx = saveC.getContext('2d');
+            
+            // 1. Draw Base (Includes Bloom/Glitch/Dither)
+            ctx.drawImage(outC, 0, 0);
+
+            // 2. Bake Horizontal Scanlines
+            const opH = document.getElementById('scanlineOp').value / 100;
+            if(opH > 0 && document.getElementById('on-post').checked) {
+                ctx.fillStyle = `rgba(0,0,0,${0.5 * opH})`; 
+                for(let y=0; y<saveC.height; y+=4) {
+                    ctx.fillRect(0, y, saveC.width, 2);
+                }
+            }
+
+            // 3. Bake Vertical Scanlines
+            const opV = document.getElementById('scanlineVertOp').value / 100;
+            if(opV > 0 && document.getElementById('on-post').checked) {
+                ctx.fillStyle = `rgba(0,0,0,${0.5 * opV})`;
+                for(let x=0; x<saveC.width; x+=4) {
+                    ctx.fillRect(x, 0, 2, saveC.height);
+                }
+            }
+
+            const link = document.createElement('a');
+            link.download = 'ditherpunk_export.png';
+            link.href = saveC.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
