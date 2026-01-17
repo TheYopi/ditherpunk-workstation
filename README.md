@@ -95,4 +95,7 @@ This is a standalone **Single-Page Application (SPA)**. No servers or dependenci
 3.  Начинайте творить.
 
 ---
+
+<img width="2559" height="1288" alt="image" src="https://github.com/user-attachments/assets/b7396ff2-5cde-4b10-8245-df425039caaa" />
+
 *Created with Gemini.*
