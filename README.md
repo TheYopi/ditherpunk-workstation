@@ -1,5 +1,4 @@
-<img width="1600" height="800" alt="image" src="https://github.com/user-attachments/assets/7e7f254b-9a66-470c-8b3f-c0635e45dfd4" />
-
+<img width="1680" height="880" alt="image" src="https://github.com/user-attachments/assets/1503815e-e840-4b52-941a-720dc4a09ffb" />
 
 # Ditherpunk Workstation
 
