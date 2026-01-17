@@ -93,4 +93,4 @@ This is a standalone **Single-Page Application (SPA)**. No servers or dependenci
 3.  Начинайте творить.
 
 ---
-*Created with ❤️ for Ditherpunk aesthetics.*
+*Created with Gemini.*
