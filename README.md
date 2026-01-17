@@ -1,3 +1,6 @@
+<img width="1600" height="800" alt="image" src="https://github.com/user-attachments/assets/7e7f254b-9a66-470c-8b3f-c0635e45dfd4" />
+
+
 # Ditherpunk Workstation
 
 ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
