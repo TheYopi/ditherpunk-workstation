@@ -1,101 +1,77 @@
-<img width="1680" height="880" alt="image" src="https://github.com/user-attachments/assets/1503815e-e840-4b52-941a-720dc4a09ffb" />
-
 # Ditherpunk Workstation
 
-![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
-![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Stable-success?style=for-the-badge)
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/1503815e-e840-4b52-941a-720dc4a09ffb" alt="Ditherpunk Interface" width="100%">
+  <br><br>
 
-> A browser-based image processing tool designed for creating retro, cyberpunk, and glitch aesthetics.
+  ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
+  ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+  ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
+  ![Status](https://img.shields.io/badge/Status-Stable-success?style=for-the-badge)
+
+  > **A browser-based visual synthesizer for creating retro, cyberpunk, and glitch aesthetics.**
+  > <br>Runs entirely client-side. No data uploaded.
+</div>
 
 ---
 
 ### 🌐 Language / Язык
-[**🇬🇧 English**](#-english-description) | [**🇷🇺 Русский**](#-описание-на-русском)
+[**🇬🇧 English Description**](#-english-description) | [**🇷🇺 Описание на Русском**](#-описание-на-русском)
 
 ---
 
 <a name="english"></a>
 ## 🇬🇧 English Description
 
-**Ditherpunk Workstation** runs entirely client-side (no data is uploaded to any server). It combines advanced dithering algorithms with generative glitch effects and CRT-style post-processing to transform modern images into retro-futuristic art.
+**Ditherpunk Workstation** transforms modern high-resolution images into retro-futuristic art. It combines a versatile Dither Engine with a destructive Glitch Processor and CRT-style Post-FX.
 
 ### ✨ Key Features
 
-| Category | Features |
+| Engine | Capabilities |
 | :--- | :--- |
-| **Dither Engine** | **Algorithms:** Ordered (Bayer, Cluster Dot, Lines) & Error Diffusion (Floyd-Steinberg, Atkinson, Stucki, etc.)<br>**Palettes:** 1-bit Mono, RGB Quantization, Hardware Emulation (Gameboy, Mac SE, CGA, VGA)<br>**Control:** Matrix Editor & Serpentine Scanning |
-| **Glitch FX** | **Pixel Sorting:** Threshold-based with directional control<br>**Compression:** JPEG block shifting, scrambling, and interlacing<br>**Distortion:** Waveform tearing & noise injection<br>**RGB Offset:** Chromatic aberration & channel swapping |
-| **Post-FX** | **Bloom:** Glow with variable intensity, radius, and blend modes (Screen, Overlay)<br>**CRT:** Horizontal & Vertical scanlines |
-| **Workflow** | **Seeds:** Share settings via short text codes or randomize for chaos<br>**Presets:** Import/Export `.json` files<br>**Comparison:** Real-time toggle between Original/Processed |
+| **📺 Dither Engine** | **Algorithms:** Ordered (Bayer 2x-8x, Cluster, Lines), Error Diffusion (Floyd-Steinberg, Atkinson, Sierra, etc.)<br>**Palettes:** 1-bit Mono, Hardware Emulation (Gameboy, CGA, VGA), and Custom 4-color.<br>**Advanced:** Matrix Editor & Serpentine Scanning. |
+| **⚡ Glitch FX** | **Scanline Jitter:** Now with **Probability/Density** control for fine-tuned chaos.<br>**Pixel Sorting:** Threshold-based sorting (Horizontal/Vertical).<br>**Distortion:** Waveform tearing, Block Displacement, and Noise injection.<br>**Destructive:** Bit Crushing, RGB Separation, and Solarization. |
+| **📼 Post-FX** | **CRT Simulation:** Horizontal & Vertical scanlines with opacity control.<br>**Atmosphere:** Bloom (Glow), Film Grain, Vignette, and Hue Shifting.<br>**Mirroring:** X/Y Axis reflection. |
+| **⚙️ Workflow** | **Native Resolution:** Processes images at original scale (no downscaling).<br>**Chaos Mode:** "Randomize Chaos" button affects all parameters for generative art.<br>**State Management:** Share settings via Text Codes or Import/Export `.json` presets. |
 
-### 📖 Interface Guide
+### 📖 Quick Start
 
-#### 1. Getting Started
-* **Input:** Click `Upload Image` on the left sidebar or **Paste (Ctrl+V)** an image anywhere.
-* **Navigation:** `Scroll` to zoom, `Click + Drag` to pan.
-
-#### 2. The Toolbars
-* **Left Sidebar (Destructive FX):** Controls Glitch effects and Pre-processing (Brightness/Contrast).
-* **Right Sidebar (Style & Output):** Controls Dithering, Color Palettes, Post-FX, and Presets.
-* **Toggles:** Click the `Checkbox` next to any group title to instantly enable/disable that stack.
-* **Resets:** **Double-click** any slider handle to reset it to default.
-
-#### 3. Exporting
-* **Share Settings:** Copy the code from the "Settings Code" box.
-* **Save Image:** Click `Save Output` to download the PNG (Effects and Scanlines are baked in).
-
-### 🚀 How to Run
-
-This is a standalone **Single-Page Application (SPA)**. No servers or dependencies required.
-
-1.  Download the `dither-project.html` file.
-2.  Double-click to open in any modern browser (Chrome, Firefox, Edge, Safari).
-3.  Start editing.
+1.  **Open:** Simply open `index.html` in any modern browser (Chrome, Firefox, Safari).
+2.  **Import:** Click `Upload Image` or press <kbd>Ctrl</kbd> + <kbd>V</kbd> to paste an image from your clipboard.
+3.  **Edit:**
+    * **Left Sidebar:** Destructive effects (Glitch, Pre-process).
+    * **Right Sidebar:** Aesthetic effects (Dither, Color, Post-FX).
+    * **Navigation:** Scroll to Zoom, Drag to Pan.
+4.  **Export:** Click `Save Output` to download the final PNG.
 
 ---
 
 <a name="russian"></a>
 ## 🇷🇺 Описание на Русском
 
-**Ditherpunk Workstation** — это инструмент для обработки изображений прямо в браузере, созданный для разработки эстетики в стиле ретро, киберпанк и глитч-арт. Приложение работает полностью на стороне клиента (изображения не загружаются на сервер).
+**Ditherpunk Workstation** — это инструмент для превращения современных изображений в ретро-футуристический арт. Приложение объединяет мощный движок дизеринга (растрирования), генератор глитч-эффектов и пост-обработку в стиле ЭЛТ-мониторов.
 
-### ✨ Ключевые особенности
+### ✨ Ключевые возможности
 
-| Категория | Возможности |
+| Модуль | Функционал |
 | :--- | :--- |
-| **Дизеринг** | **Алгоритмы:** Упорядоченные (Bayer, Halftone) и Диффузия ошибки (Floyd-Steinberg, Atkinson и др.)<br>**Палитры:** 1-бит, RGB, Эмуляция железа (Gameboy, CGA, VGA)<br>**Контроль:** Редактор матриц и "змеевидное" сканирование |
-| **Глитч** | **Pixel Sorting:** Сортировка пикселей по яркости (Pixel Sorting)<br>**Артефакты:** Сдвиг блоков JPEG, перемешивание и интерлейсинг<br>**Искажения:** Волновые деформации и шум<br>**RGB:** Хроматическая аберрация и подмена каналов |
-| **Пост-FX** | **Блум:** Свечение с настройкой радиуса и режимов наложения<br>**CRT:** Горизонтальные и вертикальные сканлайны |
-| **Процесс** | **Сиды:** Обмен настройками через текстовые коды или генерация "Хаоса"<br>**Пресеты:** Импорт/Экспорт `.json`<br>**Сравнение:** Мгновенное переключение Оригинал/Обработка |
+| **📺 Дизеринг** | **Алгоритмы:** Упорядоченные (Bayer, Cluster, Lines) и Диффузия ошибки (Floyd-Steinberg, Atkinson, Sierra и др.)<br>**Палитры:** 1-бит, Эмуляция железа (Gameboy, CGA, VGA), кастомные палитры.<br>**Контроль:** Редактор матриц и "змеевидное" сканирование. |
+| **⚡ Глитч** | **Jitter (Дрожание):** Новая настройка **Вероятности** для точного контроля плотности эффекта.<br>**Pixel Sorting:** Сортировка пикселей по яркости.<br>**Искажения:** Волновые деформации, смещение блоков и цифровой шум.<br>**Разрушение:** Bit Crush, RGB сдвиг и Соляризация. |
+| **📼 Пост-FX** | **Эмуляция CRT:** Горизонтальные и вертикальные сканлайны.<br>**Атмосфера:** Блум (свечение), зернистость пленки, виньетка.<br>**Зеркалирование:** Отражение по осям X/Y. |
+| **⚙️ Процесс** | **Нативное разрешение:** Обработка в исходном размере (без сжатия).<br>**Режим Хаоса:** Кнопка "Randomize Chaos" теперь генерирует полностью случайный стиль.<br>**Сохранение:** Обмен настройками через текстовые коды или `.json` пресеты. |
 
-### 📖 Руководство
+### 📖 Как использовать
 
-#### 1. Начало работы
-* **Загрузка:** Нажмите `Upload Image` или нажмите **Вставить (Ctrl+V)** в любом месте.
-* **Навигация:** `Колесико` для зума, `Клик + Драг` для перемещения.
-
-#### 2. Инструменты
-* **Левая панель:** Глитч-эффекты и цветокоррекция.
-* **Правая панель:** Дизеринг, Палитры, Пост-обработка и Пресеты.
-* **Тогглы:** Галочка у заголовка группы включает/выключает весь блок эффектов.
-* **Сброс:** **Двойной клик** по слайдеру сбрасывает значение.
-
-#### 3. Экспорт
-* **Обмен:** Скопируйте код из поля "Settings Code" чтобы поделиться стилем.
-* **Сохранение:** Нажмите `Save Output` для скачивания PNG (все эффекты "запекаются").
-
-### 🚀 Как запустить
-
-Это автономное приложение (**SPA**). Установка не требуется.
-
-1.  Скачайте файл `dither-project.html`.
-2.  Откройте его в любом современном браузере.
-3.  Начинайте творить.
+1.  **Запуск:** Откройте файл `index.html` в любом современном браузере.
+2.  **Загрузка:** Нажмите `Upload Image` или используйте <kbd>Ctrl</kbd> + <kbd>V</kbd> для вставки изображения из буфера обмена.
+3.  **Редактирование:**
+    * **Левая панель:** Глитч и цветокоррекция.
+    * **Правая панель:** Дизеринг, Палитры и Пост-обработка.
+    * **Навигация:** Колесико для зума, перетаскивание мышью для панорамирования.
+4.  **Экспорт:** Нажмите `Save Output` для сохранения результата в PNG.
 
 ---
 
-<img width="2559" height="1288" alt="image" src="https://github.com/user-attachments/assets/b7396ff2-5cde-4b10-8245-df425039caaa" />
-
-*Created with Gemini.*
+<div align="center">
+  <sub>Created with the help of Gemini</sub>
+</div>
