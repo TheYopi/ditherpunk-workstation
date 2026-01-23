@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ditherpunk Workstation</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="sidebar-left" class="sidebar">
+        <div class="sidebar-header">
+            <h1>Ditherpunk by TheYopi</h1>
+        </div>
+        <div class="scroll-container">
+            
+            <button class="btn primary" onclick="document.getElementById('fileIn').click()">Upload Image (or Paste)</button>
+            <input type="file" id="fileIn" accept="image/*" style="display:none">
+
+            <div class="group">
+                <div class="group-header">
+                    <div class="header-left">
+                        <input type="checkbox" class="toggle" id="on-glitch" checked oninput="update('glitch')">
+                        <span class="group-title">Glitch FX</span>
+                    </div>
+                    <span class="reset-icon" onclick="resetGroup('glitch')">Reset All</span>
+                </div>
+                
+                <div class="control-row">
+                    <div class="label-row"><label>Random Seed</label></div>
+                    <div class="seed-control">
+                        <button class="btn secondary seed-btn" onclick="stepSeed(-1)">-</button>
+                        <input type="number" id="glitchSeed" value="1337" oninput="update('glitch')">
+                        <button class="btn secondary seed-btn" onclick="stepSeed(1)">+</button>
+                    </div>
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-jitter" checked oninput="update('glitch')"><span class="sub-title">1. Scanline Jitter</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Intensity</label> <span id="disp-jitter" class="val">0</span></div>
+                    <input type="range" id="jitter" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Probability (Scale)</label> <span id="disp-jitterProb" class="val">10%</span></div>
+                    <input type="range" id="jitterProb" min="1" max="100" value="10" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-slicer" checked oninput="update('glitch')"><span class="sub-title">2. Vertical Slicer</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Shift Amount</label> <span id="disp-sliceAmount" class="val">0</span></div>
+                    <input type="range" id="sliceAmount" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-block" checked oninput="update('glitch')"><span class="sub-title">3. Block Displacement</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Shift</label> <span id="disp-blockShift" class="val">0</span></div>
+                    <input type="range" id="blockShift" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-wave" checked oninput="update('glitch')"><span class="sub-title">4. Wave Distortion</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Amplitude</label> <span id="disp-waveAmp" class="val">0</span></div>
+                    <input type="range" id="waveAmp" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Density</label> <span id="disp-waveDensity" class="val">10</span></div>
+                    <input type="range" id="waveDensity" min="1" max="100" value="10" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Noise</label> <span id="disp-waveNoise" class="val">0</span></div>
+                    <input type="range" id="waveNoise" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-sort" checked oninput="update('glitch')"><span class="sub-title">5. Pixel Sorting</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Threshold</label> <span id="disp-sortThresh" class="val">0</span></div>
+                    <input type="range" id="sortThresh" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Direction</label></div>
+                    <select id="sortDir" oninput="update('glitch')">
+                        <option value="hor">Horizontal</option>
+                        <option value="vert">Vertical</option>
+                    </select>
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-rgb" checked oninput="update('glitch')"><span class="sub-title">6. RGB Separation</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Red Offset</label> <span id="disp-offR" class="val">0</span></div>
+                    <input type="range" id="offR" min="-50" max="50" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Green Offset</label> <span id="disp-offG" class="val">0</span></div>
+                    <input type="range" id="offG" min="-50" max="50" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Blue Offset</label> <span id="disp-offB" class="val">0</span></div>
+                    <input type="range" id="offB" min="-50" max="50" value="0" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-bitcrush" checked oninput="update('glitch')"><span class="sub-title">7. Bit Crush</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Level</label> <span id="disp-bitCrush" class="val">0</span></div>
+                    <input type="range" id="bitCrush" min="0" max="7" value="0" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-noise" checked oninput="update('glitch')"><span class="sub-title">8. Digital Noise</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Amount</label> <span id="disp-noiseAmt" class="val">0</span></div>
+                    <input type="range" id="noiseAmt" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-ghost" checked oninput="update('glitch')"><span class="sub-title">9. Ghosting</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Offset</label> <span id="disp-ghostOffset" class="val">0</span></div>
+                    <input type="range" id="ghostOffset" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Opacity</label> <span id="disp-ghostOpacity" class="val">0</span></div>
+                    <input type="range" id="ghostOpacity" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+
+                <div class="sub-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-solar" checked oninput="update('glitch')"><span class="sub-title">10. Solarize / Invert</span></div>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Mix</label> <span id="disp-solarMix" class="val">0</span></div>
+                    <input type="range" id="solarMix" min="0" max="100" value="0" oninput="update('glitch')">
+                </div>
+
+            </div>
+
+            <div class="group">
+                <div class="group-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-pre" checked oninput="update('pre')"><span class="group-title">Pre-Process</span></div>
+                    <span class="reset-icon" onclick="resetGroup('pre')">Reset</span>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Brightness</label> <span id="disp-brightness" class="val">0</span></div>
+                    <input type="range" id="brightness" min="-100" max="100" value="0" oninput="update('pre')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Contrast</label> <span id="disp-contrast" class="val">0</span></div>
+                    <input type="range" id="contrast" min="-100" max="100" value="0" oninput="update('pre')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Saturation</label> <span id="disp-saturation" class="val">0</span></div>
+                    <input type="range" id="saturation" min="-100" max="100" value="0" oninput="update('pre')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Blur</label> <span id="disp-blur" class="val">0</span></div>
+                    <input type="range" id="blur" min="0" max="10" value="0" oninput="update('pre')">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewport">
+        <button id="compare-btn" class="float-pill" onclick="toggleCompare()">SHOW ORIGINAL</button>
+        <div id="resolution-display" class="float-pill">0 x 0</div>
+        <div id="loading-overlay"><div class="spinner"></div><span>Processing</span></div>
+        <div id="canvas-wrapper">
+            <div id="canvas-clipper">
+                <canvas id="output-canvas"></canvas>
+                <div id="scanlines" class="fx-layer" style="opacity:0"></div>
+                <div id="scanlines-vert" class="fx-layer" style="opacity:0"></div>
+                <div id="original-overlay"></div> 
+            </div>
+        </div>
+        <div id="toolbar">
+            <button class="tool-btn" onclick="fitView()" title="Fit to Screen">Fit</button>
+            <button class="tool-btn" onclick="zoom(0.1)" title="Zoom In">+</button>
+            <button class="tool-btn" onclick="zoom(-0.1)" title="Zoom Out">-</button>
+        </div>
+    </div>
+
+    <div id="sidebar-right" class="sidebar">
+        <div class="scroll-container">
+            <div class="group">
+                <div class="group-header"><span class="group-title">Export / Output</span></div>
+                <button class="btn primary" onclick="downloadImage()">Save Output</button>
+            </div>
+
+            <div class="group" style="border-color: var(--accent);">
+                <div class="group-header"><span class="group-title">Presets</span></div>
+                <div class="btn-row">
+                    <button class="btn secondary" onclick="document.getElementById('jsonIn').click()">Import .JSON</button>
+                    <button class="btn secondary" onclick="savePreset()">Export .JSON</button>
+                </div>
+                <input type="file" id="jsonIn" accept=".json" style="display:none" onchange="loadUserPreset(this)">
+            </div>
+
+            <div class="group" style="border-color: #666;">
+                <div class="group-header"><span class="group-title">Settings Code</span></div>
+                <div class="control-row">
+                    <label class="label-row">Share Code</label>
+                    <textarea id="settings-seed" rows="3" readonly></textarea>
+                    <button class="btn secondary" onclick="randomizeAll()">Randomize Chaos</button>
+                </div>
+                <div class="control-row" style="margin-top:10px; padding-top:10px; border-top:1px dashed #333;">
+                    <label class="label-row">Load Code</label>
+                    <input type="text" id="seed-input" placeholder="Paste code here...">
+                    <button class="btn" onclick="applySeedFromInput()">Apply Code</button>
+                </div>
+            </div>
+
+            <div class="group">
+                <div class="group-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-dither" checked oninput="update('dither')"><span class="group-title">Dither Engine</span></div>
+                    <span class="reset-icon" onclick="resetGroup('dither')">Reset</span>
+                </div>
+                <div class="control-row">
+                    <label class="label-row">Algorithm</label>
+                    <select id="algo" oninput="handleAlgoChange()">
+                        <optgroup label="Simple">
+                            <option value="none" selected>No Dither</option>
+                            <option value="whiteNoise">White Noise (Random)</option>
+                        </optgroup>
+                        <optgroup label="Ordered (Standard)">
+                            <option value="bayer4">Bayer 4x4</option>
+                            <option value="bayer2">Bayer 2x2</option>
+                            <option value="bayer8">Bayer 8x8</option>
+                            <option value="cluster4">Cluster Dot 4x4</option>
+                            <option value="linesH">Lines Horizontal</option>
+                            <option value="linesV">Lines Vertical</option>
+                        </optgroup>
+                        <optgroup label="Modulation / Patterns">
+                            <option value="halftone4">Halftone Dot 4x4</option>
+                            <option value="halftone8">Halftone Dot 8x8</option>
+                            <option value="round8">Halftone Round 8x8</option>
+                            <option value="line45">Lines 45°</option>
+                            <option value="crosshatch">Crosshatch 8x8</option>
+                            <option value="checker">Checkerboard</option>
+                            <option value="snake">Snake 4x4</option>
+                            <option value="zigzag">ZigZag 8x8</option>
+                            <option value="vert50">Vertical Strip 50%</option>
+                            <option value="horz50">Horizontal Strip 50%</option>
+                            <option value="magic">Magic Square 4x4</option>
+                        </optgroup>
+                        <optgroup label="Error Diffusion">
+                            <option value="floyd">Floyd-Steinberg</option>
+                            <option value="falseFloyd">False Floyd</option>
+                            <option value="shiau">Shiau-Fan</option>
+                            <option value="atkinson">Atkinson</option>
+                            <option value="stucki">Stucki</option>
+                            <option value="burkes">Burkes</option>
+                            <option value="sierra2">Sierra 2</option>
+                            <option value="sierraLite">Sierra Lite</option>
+                            <option value="jjn">Jarvis, Judice & Ninke</option>
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <div class="control-row">
+                    <div class="label-row"><label>Banding (Levels)</label> <span id="disp-banding" class="val">255</span></div>
+                    <input type="range" id="banding" min="2" max="255" value="255" oninput="update('dither')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Dither Scale (Size)</label> <span id="disp-ditherScale" class="val">1</span></div>
+                    <input type="range" id="ditherScale" min="1" max="16" value="1" oninput="update('dither')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Pattern Stretch (Aspect)</label> <span id="disp-ditherStretch" class="val">0</span></div>
+                    <input type="range" id="ditherStretch" min="-50" max="50" value="0" oninput="update('dither')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Pattern Angle</label> <span id="disp-patternAngle" class="val">0°</span></div>
+                    <input type="range" id="patternAngle" min="0" max="360" value="0" oninput="update('dither')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>RGB Phase Shift (Sub-Pixel)</label> <span id="disp-rgbPhase" class="val">0</span></div>
+                    <input type="range" id="rgbPhase" min="0" max="10" value="0" oninput="update('dither')">
+                </div>
+                
+                <div class="control-row">
+                    <div class="label-row"><label>Pattern Noise (Hybrid)</label> <span id="disp-ditherNoise" class="val">0</span></div>
+                    <input type="range" id="ditherNoise" min="0" max="100" value="0" oninput="update('dither')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Modulation (Shape)</label></div>
+                    <select id="modShape" oninput="update('dither')">
+                        <option value="sine">Sine Wave</option>
+                        <option value="triangle">Triangle</option>
+                        <option value="noise">Noise</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Threshold Mod (Amount)</label> <span id="disp-threshMod" class="val">0</span></div>
+                    <input type="range" id="threshMod" min="0" max="50" value="0" oninput="update('dither')">
+                </div>
+                
+                <div class="control-row">
+                    <div class="label-row"><label>Pre-Contrast</label> <span id="disp-preCon" class="val">0</span></div>
+                    <input type="range" id="preCon" min="0" max="100" value="0" oninput="update('dither')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Quantization Bias</label> <span id="disp-quantBias" class="val">0</span></div>
+                    <input type="range" id="quantBias" min="-50" max="50" value="0" oninput="update('dither')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Error Bleed (Diffusion)</label> <span id="disp-errBleed" class="val">100%</span></div>
+                    <input type="range" id="errBleed" min="0" max="100" value="100" oninput="update('dither')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Luma Priority</label> <span id="disp-lumaWeight" class="val">0%</span></div>
+                    <input type="range" id="lumaWeight" min="0" max="100" value="0" oninput="update('dither')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Threshold Bias</label> <span id="disp-ditherBias" class="val">0</span></div>
+                    <input type="range" id="ditherBias" min="-100" max="100" value="0" oninput="update('dither')">
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Diffusion Strength</label> <span id="disp-diffStrength" class="val">100%</span></div>
+                    <input type="range" id="diffStrength" min="0" max="200" value="100" oninput="update('dither')">
+                </div>
+
+                <div id="serpentine-row" class="control-row" style="display:none; align-items:center; gap:10px;">
+                    <input type="checkbox" id="serpentine" checked oninput="update('dither')">
+                    <label class="label-row" style="margin:0; flex:1">Serpentine Scan</label>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Pixel Scale</label> <span id="disp-scale" class="val">1</span></div>
+                    <input type="range" id="scale" min="1" max="16" value="1" oninput="update('glitch')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Color Mode</label></div>
+                    <select id="colorMode" oninput="togglePaletteControls()">
+                        <option value="rgb" selected>RGB Color</option>
+                        <option value="gray">Grayscale</option>
+                        <option value="mono">1-Bit Monochrome</option>
+                        <option value="custom">Custom Palette</option>
+                        <optgroup label="Hardware Palettes">
+                            <option value="p-gb">Gameboy</option>
+                            <option value="p-mac">Macintosh SE</option>
+                            <option value="p-cga1">CGA 1</option>
+                            <option value="p-cga2">CGA 2</option>
+                            <option value="p-vga">VGA Terminal</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div id="pal-mono" class="control-row" style="display:none">
+                    <div class="label-row" style="margin-top:5px"><label>Light Color</label> <input type="color" id="col-light" value="#00e5ff" oninput="update('dither')"></div>
+                    <div class="label-row" style="margin-top:5px"><label>Dark Color</label> <input type="color" id="col-dark" value="#0a0a0a" oninput="update('dither')"></div>
+                    <div class="label-row" style="margin-top:10px"><label>Threshold</label> <span id="disp-threshold" class="val">128</span></div>
+                    <input type="range" id="threshold" min="0" max="255" value="128" oninput="update('dither')">
+                </div>
+                <div id="pal-rgb" class="control-row">
+                    <div class="label-row" style="justify-content: flex-start; gap: 8px;">
+                        <input type="checkbox" class="toggle" id="on-depth" checked oninput="update('dither')">
+                        <label style="flex:1">Bit Depth</label>
+                        <span id="disp-depth" class="val">32</span>
+                    </div>
+                    <input type="range" id="depth" min="2" max="32" value="32" oninput="update('dither')">
+                </div>
+                
+                <div id="pal-custom" class="control-row" style="display:none">
+                    <div class="label-row"><label>Palette Size</label></div>
+                    <select id="customCount" oninput="updateCustomPaletteUI(); update('dither')">
+                        <option value="2">2 Colors</option>
+                        <option value="3">3 Colors</option>
+                        <option value="4">4 Colors</option>
+                    </select>
+                    <div id="custom-colors-container" style="margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;">
+                        <input type="color" id="custom1" value="#000000" oninput="update('dither')">
+                        <input type="color" id="custom2" value="#ffffff" oninput="update('dither')">
+                        <input type="color" id="custom3" value="#ff0000" style="display:none" oninput="update('dither')">
+                        <input type="color" id="custom4" value="#0000ff" style="display:none" oninput="update('dither')">
+                    </div>
+                </div>
+
+                <div id="advanced-matrix" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;">
+                    <div class="label-row">
+                        <label>Matrix Editor</label> 
+                        <span class="reset-icon" onclick="resetMatrix()">Default</span>
+                    </div>
+                    <div id="matrix-grid"></div>
+                </div>
+            </div>
+
+            <div class="group">
+                <div class="group-header">
+                    <div class="header-left"><input type="checkbox" class="toggle" id="on-post" checked oninput="update('post')"><span class="group-title">Post-FX</span></div>
+                    <span class="reset-icon" onclick="resetGroup('post')">Reset</span>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Bloom Mode</label></div>
+                    <select id="bloomMix" oninput="update('post')">
+                        <option value="screen">Add / Screen</option>
+                        <option value="overlay">Overlay</option>
+                        <option value="source-over">Normal</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Bloom Intensity</label> <span id="disp-bloom" class="val">0</span></div>
+                    <input type="range" id="bloom" min="0" max="500" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Bloom Radius</label> <span id="disp-bloomRadius" class="val">0</span></div>
+                    <input type="range" id="bloomRadius" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+                
+                <div class="control-row">
+                    <div class="label-row"><label>Vignette</label> <span id="disp-vignette" class="val">0</span></div>
+                    <input type="range" id="vignette" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Film Grain</label> <span id="disp-grain" class="val">0</span></div>
+                    <input type="range" id="grain" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Hue Shift</label> <span id="disp-hueShift" class="val">0</span></div>
+                    <input type="range" id="hueShift" min="0" max="360" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Invert</label> <span id="disp-postInvert" class="val">0</span></div>
+                    <input type="range" id="postInvert" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Sepia</label> <span id="disp-postSepia" class="val">0</span></div>
+                    <input type="range" id="postSepia" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Post Brightness</label> <span id="disp-postBri" class="val">0</span></div>
+                    <input type="range" id="postBri" min="-100" max="100" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Post Contrast</label> <span id="disp-postCon" class="val">0</span></div>
+                    <input type="range" id="postCon" min="-100" max="100" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Post Saturation</label> <span id="disp-postSat" class="val">0</span></div>
+                    <input type="range" id="postSat" min="-100" max="100" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Post Blur</label> <span id="disp-postBlur" class="val">0</span></div>
+                    <input type="range" id="postBlur" min="0" max="20" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Mirror</label></div>
+                    <div style="display:flex; gap:10px;">
+                        <label><input type="checkbox" id="mirrorX" oninput="update('post')"> X</label>
+                        <label><input type="checkbox" id="mirrorY" oninput="update('post')"> Y</label>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <div class="label-row"><label>Scanlines (H)</label> <span id="disp-scanlineOp" class="val">0</span></div>
+                    <input type="range" id="scanlineOp" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+                <div class="control-row">
+                    <div class="label-row"><label>Scanlines (V)</label> <span id="disp-scanlineVertOp" class="val">0</span></div>
+                    <input type="range" id="scanlineVertOp" min="0" max="100" value="0" oninput="update('post')">
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <button class="btn danger" onclick="globalReset()">GLOBAL RESET</button>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
