@@ -1,7 +1,7 @@
-# Ditherpunk Workstation
+# DitherPunk
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/1503815e-e840-4b52-941a-720dc4a09ffb" alt="Ditherpunk Interface" width="100%">
+  <img width="267" height="267" alt="icon" src="https://github.com/user-attachments/assets/8bd20977-67e2-4a03-8bab-e98ba447df55" />
   <br><br>
 
   ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
