@@ -69,7 +69,7 @@ const DEFAULTS = {
         pre: false, dither: true, post: false, depth: true
     },
     glitch: {
-        seed: 1337, jitter: 0, jitterProb: 10, // Added jitterProb
+        seed: 1337, jitter: 0, jitterProb: 10, 
         sliceAmount: 0, blockShift: 0,
         waveAmp: 0, waveDensity: 10, waveNoise: 0,
         sortThresh: 0, sortDir: 'hor',
@@ -86,6 +86,7 @@ const DEFAULTS = {
         ditherStretch: 0, ditherNoise: 0, preCon: 0, quantBias: 0,
         patternAngle: 0, rgbPhase: 0, threshMod: 0, modShape: 'sine',
         errBleed: 100, lumaWeight: 0,
+        useGamma: false,
         light: '#00e5ff', dark: '#0a0a0a',
         custom: { count: 2, c1: '#000000', c2: '#ffffff', c3: '#ff0000', c4: '#0000ff' }
     },
@@ -101,7 +102,7 @@ const DEFAULTS = {
 
 const SLIDER_DEFAULTS = {
     brightness: 0, contrast: 0, saturation: 0, blur: 0,
-    jitter: 0, jitterProb: 10, // Added jitterProb
+    jitter: 0, jitterProb: 10, 
     sliceAmount: 0, blockShift: 0, waveAmp: 0, waveDensity: 10, waveNoise: 0,
     sortThresh: 0, offR: 0, offG: 0, offB: 0, bitCrush: 0,
     noiseAmt: 0, ghostOffset: 0, ghostOpacity: 0, solarMix: 0,
@@ -146,17 +147,24 @@ function seededRandom(seed) {
 function findClosestPaletteColor(r, g, b, palette, lumaWeight) {
     let minDist = Infinity;
     let closest = palette[0];
-    let wR = 1, wG = 1, wB = 1;
-    
-    if(lumaWeight > 0) {
-        const lw = lumaWeight / 100;
-        wR = 1 + (0.299 * 3 - 1) * lw; 
-        wG = 1 + (0.587 * 3 - 1) * lw;
-        wB = 1 + (0.114 * 3 - 1) * lw;
-    }
 
     for(let c of palette) {
-        let dist = (r - c.r)**2 * wR + (g - c.g)**2 * wG + (b - c.b)**2 * wB;
+        // ENHANCEMENT: "Redmean" Perceptual Color Distance
+        const rmean = (r + c.r) / 2;
+        const dr = r - c.r;
+        const dg = g - c.g;
+        const db = b - c.b;
+
+        let wR = 2 + rmean / 256;
+        let wG = 4.0;
+        let wB = 2 + (255 - rmean) / 256;
+
+        if (lumaWeight > 0) {
+            wG += (lumaWeight / 5); 
+        }
+
+        const dist = Math.sqrt(wR * dr*dr + wG * dg*dg + wB * db*db);
+
         if(dist < minDist) {
             minDist = dist;
             closest = c;
@@ -270,8 +278,7 @@ function processImage() {
     try {
         const pixelScale = parseInt(document.getElementById('scale').value);
         
-        // --- CHANGED: Removed MAX_DIM (800px) limit ---
-        // Now uses the native resolution divided only by the Pixel Scale slider
+        // Use native resolution
         const finalW = Math.floor(srcImage.width / pixelScale);
         const finalH = Math.floor(srcImage.height / pixelScale);
 
@@ -282,7 +289,6 @@ function processImage() {
             procCanvas.height = finalH;
         }
         
-        // FIX: Clear process canvas
         procCtx.clearRect(0, 0, finalW, finalH);
         procCtx.drawImage(srcImage, 0, 0, finalW, finalH);
         let imgData = procCtx.getImageData(0, 0, finalW, finalH);
@@ -307,8 +313,6 @@ function applyGlitch(data, w, h) {
     let seed = parseInt(document.getElementById('glitchSeed').value);
     const original = new Uint8ClampedArray(data); 
 
-    // --- PARAMETERS ---
-    // Safety checks for new sliders
     const jitterEl = document.getElementById('jitter');
     const jitterProbEl = document.getElementById('jitterProb');
 
@@ -363,7 +367,7 @@ function applyGlitch(data, w, h) {
                             for(let k=0; k<span.length; k++) {
                                 const tIdx = (y*w + (spanStart+k))*4;
                                 data[tIdx] = span[k].r; data[tIdx+1] = span[k].g; data[tIdx+2] = span[k].b;
-                                data[tIdx+3] = span[k].a; // Fix: Move Alpha
+                                data[tIdx+3] = span[k].a;
                             }
                             span = []; spanStart = -1;
                         }
@@ -425,14 +429,11 @@ function applyGlitch(data, w, h) {
     for(let y=0; y<h; y++) {
         let rowShiftX = 0;
         
-        // --- JITTER LOGIC START ---
         if(onJitter && jitter > 0) {
-            // Check probability before shifting
             if(seededRandom(seed + y) < jitterProb) {
                 rowShiftX = Math.floor((seededRandom(seed + y + 1) - 0.5) * jitter);
             }
         }
-        // --- JITTER LOGIC END ---
 
         if(onWave && waveAmp > 0) {
                 let noiseComp = 0;
@@ -468,7 +469,6 @@ function applyGlitch(data, w, h) {
                 const idxG = getSrc(srcX + offG, srcY);
                 const idxB = getSrc(srcX + offB, srcY);
                 r = original[idxR]; g = original[idxG+1]; b = original[idxB+2];
-                // Use geometry from the "green" or "base" check to get alpha
                 a = original[getSrc(srcX, srcY)+3];
             } else {
                 const idx = getSrc(srcX, srcY);
@@ -559,6 +559,7 @@ function applyDithering(data, w, h) {
     const depth = parseInt(document.getElementById('depth').value);
     const useDepth = document.getElementById('on-depth').checked;
     const threshold = parseInt(document.getElementById('threshold').value);
+    const useGamma = document.getElementById('useGamma').checked;
     
     const bandingLevels = parseInt(document.getElementById('banding').value);
     let bandingStep = 1;
@@ -568,11 +569,10 @@ function applyDithering(data, w, h) {
     const ditherBias = parseInt(document.getElementById('ditherBias').value);
     const diffStrength = parseInt(document.getElementById('diffStrength').value) / 100;
     
-    // NEW PARAMS
-    const ditherStretch = parseInt(document.getElementById('ditherStretch').value); // -50 to 50
-    const ditherNoise = parseInt(document.getElementById('ditherNoise').value); // 0-100
-    const preCon = parseInt(document.getElementById('preCon').value); // 0-100
-    const quantBias = parseInt(document.getElementById('quantBias').value); // -50 to 50
+    const ditherStretch = parseInt(document.getElementById('ditherStretch').value); 
+    const ditherNoise = parseInt(document.getElementById('ditherNoise').value); 
+    const preCon = parseInt(document.getElementById('preCon').value); 
+    const quantBias = parseInt(document.getElementById('quantBias').value); 
 
     const patternAngle = parseInt(document.getElementById('patternAngle').value);
     const rgbPhase = parseInt(document.getElementById('rgbPhase').value);
@@ -580,9 +580,10 @@ function applyDithering(data, w, h) {
     const modShape = document.getElementById('modShape').value; 
     const errBleed = parseInt(document.getElementById('errBleed').value) / 100;
     const lumaWeight = parseInt(document.getElementById('lumaWeight').value);
-
-    const isErrorDiff = (algo !== 'none' && algo !== 'whiteNoise' && !algo.startsWith('bayer') && !algo.startsWith('cluster') && !algo.startsWith('lines') && !algo.startsWith('halftone') && !algo.startsWith('round') && !algo.startsWith('cross') && !algo.startsWith('check') && !algo.startsWith('snake') && !algo.startsWith('zig') && !algo.startsWith('vert') && !algo.startsWith('horz') && !algo.startsWith('magic') && !algo.startsWith('line'));
-    const isOrdered = !isErrorDiff && algo !== 'none' && algo !== 'whiteNoise';
+    
+    const isSimple = (algo === 'none' || algo === 'whiteNoise' || algo === 'ign');
+    const isErrorDiff = (!isSimple && !algo.startsWith('bayer') && !algo.startsWith('cluster') && !algo.startsWith('lines') && !algo.startsWith('halftone') && !algo.startsWith('round') && !algo.startsWith('cross') && !algo.startsWith('check') && !algo.startsWith('snake') && !algo.startsWith('zig') && !algo.startsWith('vert') && !algo.startsWith('horz') && !algo.startsWith('magic') && !algo.startsWith('line'));
+    const isOrdered = !isErrorDiff && !isSimple;
     const serpentine = document.getElementById('serpentine').checked;
 
     let matrix = bayer4;
@@ -612,7 +613,8 @@ function applyDithering(data, w, h) {
     let kDiv = 1;
     if(isErrorDiff) {
         kernel = kernels[algo];
-        kDiv = kernel.reduce((acc, k) => acc + k[2], 0);
+        if (algo === 'atkinson') kDiv = 8; 
+        else kDiv = kernel.reduce((acc, k) => acc + k[2], 0);
     }
 
     const light = hexToRgb(document.getElementById('col-light').value);
@@ -620,25 +622,29 @@ function applyDithering(data, w, h) {
     const hwPalette = HARDWARE_PALETTES[mode];
     const depthStep = 255 / (depth - 1);
 
-    // Pre-calculate rotation
     const angRad = patternAngle * (Math.PI / 180);
     const cAng = Math.cos(angRad);
     const sAng = Math.sin(angRad);
 
-    // Pre-calculate Stretch factors (0 means 1:1, >0 stretches X, <0 stretches Y)
     let scaleX = 1, scaleY = 1;
     if(ditherStretch > 0) scaleX = 1 + (ditherStretch / 10);
     else if(ditherStretch < 0) scaleY = 1 + (Math.abs(ditherStretch) / 10);
 
-    // Pre-calculate Pre-Contrast factor
     const preConFactor = (259 * (preCon + 255)) / (255 * (259 - preCon));
 
-    // NEW: CUSTOM PALETTE LOADING
     let customPalette = [];
     if(mode === 'custom') {
         const count = parseInt(document.getElementById('customCount').value);
         for(let i=1; i<=count; i++) {
             customPalette.push(hexToRgb(document.getElementById('custom' + i).value));
+        }
+    }
+    
+    const toLin = new Float32Array(256);
+    const toSrgb = new Uint8ClampedArray(256); 
+    if(useGamma) {
+        for(let i=0; i<256; i++) {
+            toLin[i] = Math.pow(i / 255, 2.2); 
         }
     }
 
@@ -654,21 +660,24 @@ function applyDithering(data, w, h) {
 
             let r = data[idx], g = data[idx+1], b = data[idx+2];
             
-            // 1. Pre-Contrast
+            if(useGamma) {
+                r = toLin[r] * 255;
+                g = toLin[g] * 255;
+                b = toLin[b] * 255;
+            }
+            
             if (preCon > 0) {
                 r = preConFactor * (r - 128) + 128;
                 g = preConFactor * (g - 128) + 128;
                 b = preConFactor * (b - 128) + 128;
             }
 
-            // 2. Banding (Pre-Dither)
             if (bandingLevels < 255) {
                 r = Math.floor(r / bandingStep) * bandingStep;
                 g = Math.floor(g / bandingStep) * bandingStep;
                 b = Math.floor(b / bandingStep) * bandingStep;
             }
 
-            // 3. Quantization Bias (Shift values before matching)
             if (quantBias !== 0) {
                 r += quantBias; g += quantBias; b += quantBias;
             }
@@ -676,7 +685,12 @@ function applyDithering(data, w, h) {
             if (algo === 'whiteNoise') {
                 const noise = (Math.random() - 0.5) * 255; 
                 r += noise; g += noise; b += noise;
-            } else if (algo === 'random') {
+            }
+            else if (algo === 'ign') { 
+                const ign = (52.9829189 * Math.abs(((0.06711056 * x + 0.00583715 * y) % 1.0))) % 1.0;
+                const noise = (ign - 0.5) * 255;
+                r += noise; g += noise; b += noise;
+            }else if (algo === 'random') {
                 const noise = (Math.random() - 0.5) * 60;
                 r += noise; g += noise; b += noise;
             } else if (isOrdered) {
@@ -768,7 +782,13 @@ function applyDithering(data, w, h) {
                 }
             }
 
-            data[idx] = nr; data[idx+1] = ng; data[idx+2] = nb;
+            if(useGamma) {
+                data[idx] = Math.pow(clamp(nr) / 255, 1/2.2) * 255;
+                data[idx+1] = Math.pow(clamp(ng) / 255, 1/2.2) * 255;
+                data[idx+2] = Math.pow(clamp(nb) / 255, 1/2.2) * 255;
+            } else {
+                data[idx] = nr; data[idx+1] = ng; data[idx+2] = nb;
+            }
 
             if (isErrorDiff) {
                 er *= errBleed; eg *= errBleed; eb *= errBleed;
@@ -926,8 +946,7 @@ function composeOutput() {
         // --- SCANLINES ---
         document.getElementById('scanlines').style.opacity = document.getElementById('scanlineOp').value / 100;
         document.getElementById('scanlines-vert').style.opacity = document.getElementById('scanlineVertOp').value / 100;
-        }
-    else {
+    } else {
         document.getElementById('scanlines').style.opacity = 0;
         document.getElementById('scanlines-vert').style.opacity = 0;
     }
@@ -1006,6 +1025,7 @@ function getSettingsState() {
         },
         dither: {
             algo: document.getElementById('algo').value,
+            useGamma: document.getElementById('useGamma').checked,
             scale: document.getElementById('scale').value,
             colorMode: document.getElementById('colorMode').value,
             threshold: document.getElementById('threshold').value,
@@ -1173,6 +1193,7 @@ function applySettingsState(partialState) {
     }
     if(s.dither) {
         for(let k in s.dither) {
+            if(k === 'useGamma') { document.getElementById('useGamma').checked = s.dither.useGamma; continue; }
             if(k === 'custom') {
                 document.getElementById('customCount').value = s.dither.custom.count;
                 document.getElementById('custom1').value = s.dither.custom.c1;
